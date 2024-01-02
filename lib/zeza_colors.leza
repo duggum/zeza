@@ -29,6 +29,10 @@
 #       "$(256 f 244)${und}gray underlined text and${rund} now just gray${rst}"
 #       "${grn}${ylwbb}green on bright yellow${rbg} and now just green${rst}"
 #       "${blu}${bld}${und}${itl}blue, bold, underlined, italic${rst}"
+#
+#   Example using printf:
+#
+#       printf "%b%bBold, red text!%b" "$bld" "$red" "$rst"
 #<<
 
 #>> COLOR CHEAT SHEET
