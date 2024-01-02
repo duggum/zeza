@@ -1,0 +1,3 @@
+# syntax highlighting assignments
+config/*.eza linguist-language=ini
+lib/*.*eza linguist-language=zsh
