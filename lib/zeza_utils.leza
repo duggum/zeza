@@ -135,7 +135,8 @@ function .zeza-run-command() {
 #<<
 function .zeza-load-codes() {
 
-    #>> sed regex used below (POSIX mode for max compatibility):
+    #>> sed regex for parsing '.eza' configuration files
+    # (POSIX mode for max compatibility):
     # /^[[:blank:]]*#/d                     # remove full comment lines
     # /^[[:blank:]]*$/d                     # remove blank lines
     # s/[[:blank:]]*#.*$//                  # remove comments at end of line
@@ -183,6 +184,16 @@ function .zeza-load-codes() {
 # @see [.zeza-file-system-error](#zezafilesystemerror)
 #<<
 function .zeza-load-settings() {
+
+    #>> sed regex for parsing '.eza' configuration files
+    # (POSIX mode for max compatibility):
+    # /^[[:blank:]]*#/d                     # remove full comment lines
+    # /^[[:blank:]]*$/d                     # remove blank lines
+    # s/[[:blank:]]*#.*$//                  # remove comments at end of line
+    # s/^[[:blank:]]*//g                    # remove whitespace at line start
+    # s/[[:blank:]]*=[[:blank:]]*[\"]/=/g   # remove whitespace around '='
+    # s/[\"]//g                             # remove double quotes
+    #<<
 
     # load the settings data
     .zeza-run-command sed --posix \

@@ -26,6 +26,6 @@ local -a match mbegin mend reply
 # source the color library and the prefix tag
 builtin source "$ZEZA[LIB_DIR]/zeza_colors.leza"
 
-# # these get used a lot, so save some keystrokes
+# these get used a lot, so save some keystrokes
 local tag="$ZEZA[OUTPUT_TAG]"
 local cancelled="\n$tag$ylw Operation cancelled.$rst\n"
