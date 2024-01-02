@@ -98,7 +98,6 @@ local blkb redb grnb ylwb blub magb cynb whtb           # set bright fg colors
 local blknb rednb grnnb ylwnb blunb magnb cynnb whtnb   # set normal bg colors
 local blkbb redbb grnbb ylwbb blubb magbb cynbb whtbb   # set bright bg colors
 local rfg rbg                                           # reset fg/bg colors
-
 #-------------------------------------------------------------------------------
 # OPT: these are not widely supported - uncomment here and below to use
 # local hid str dund                                      # set effects
@@ -116,7 +115,6 @@ itl="\e[3m"         # set italic
 und="\e[4m"         # set underline
 fla="\e[5m"         # set flash a.k.a. blink
 inv="\e[7m"         # set inverse
-
 #-------------------------------------------------------------------------------
 # OPT: these are not widely supported - uncomment to use
 # hid="\e[8m"         # set hidden/not visible (not widely supported)
@@ -131,7 +129,6 @@ ritl="\e[23m"       # reset italic
 rund="\e[24m"       # reset underline (single and double, if in use)
 rfla="\e[25m"       # reset flash a.k.a. blink
 rinv="\e[27m"       # reset inverse
-
 #-------------------------------------------------------------------------------
 # OPT: these are not widely supported - uncomment to use
 # rhid="\e[28m"       # reset hidden/invisible (not widely supported)
@@ -205,8 +202,7 @@ function z256() {
     [[ "$1" = "b" ]] && mode=48
 
     # print the color sequence
-    # printf "\e[%s;5;%sm" "$mode" "$2"
-    echo "\e[${mode};5;${2}m"
+    printf "\e[%s;5;%sm" "$mode" "$2"
 }
 
 #>> rgb color prefixes

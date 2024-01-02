@@ -51,22 +51,8 @@
 
 #<<
 
-# use associative array for environment to minimize global pollution
+# use associative array for environment/state to minimize global pollution
 typeset -gA ZEZA;
-
-# colorful tag for plugin-specific console output --> '[zeza]:'
-ZEZA[OUTPUT_TAG]="\e[37m[\e[38;5;214mzeza\e[37m]:\e[0m"
-
-# save a lot of keystrokes...
-local tag="$ZEZA[OUTPUT_TAG]"
-
-# no sense continuing if eza isn't installed
-if (( ! ${+commands[eza]} )); then
-    printf "%b %bCommand not found - eza%b\n" "$tag" "\e[31m" "\e[0m" 1>&2
-    printf "%b %bVisit %b%bhttps://eza.rocks%b %bfor instructions on how to install it.%b\n\n" \
-        "$tag" "\e[37m" "\e[34m" "\e[4m" "\e[24m" "\e[37m" "\e[0m" 1>&2
-    return 69
-fi
 
 # establish the plugin's 'home' dir ($0)
 # https://wiki.zshell.dev/community/zsh_plugin_standard#zero-handling
@@ -75,14 +61,12 @@ fi
 
 #>> plugin directories
 # root:         plugin root
-# bin:          user-facing commands
 # config:       configuration files
 # functions:    internally accessed plugin functions
 # lib:          internally accessed library functions
 # cache:        plugin info that needs to be persistent
 #<<
 ZEZA[ROOT_DIR]="${0:h}"
-ZEZA[BIN_DIR]="$ZEZA[ROOT_DIR]/bin"
 ZEZA[CONFIG_DIR]="$ZEZA[ROOT_DIR]/config"
 ZEZA[FUNC_DIR]="$ZEZA[ROOT_DIR]/functions"
 ZEZA[LIB_DIR]="$ZEZA[ROOT_DIR]/lib"
@@ -99,6 +83,20 @@ for file in $ZEZA[LIB_DIR]/*.leza ; do
 done
 unset file
 #<<
+
+# colorful tag for plugin-specific console output --> '[zeza]:'
+ZEZA[OUTPUT_TAG]=$(printf "%b[%bzeza%b]:%b" "$wht" "$(z256 f 214)" "$wht" "$rst")
+
+# save a lot of keystrokes...
+local tag="$ZEZA[OUTPUT_TAG]"
+
+# no sense continuing if eza isn't installed
+if (( ! ${+commands[eza]} )); then
+    printf "%b %bCommand not found - eza%b\n" "$tag" "$red" "$rst" 1>&2
+    printf "%b %bVisit %b%bhttps://eza.rocks%b %bfor instructions on how to install it.%b\n\n" \
+        "$tag" "$wht" "$blu" "$und" "$rund" "$wht" "$rst" 1>&2
+    return 69
+fi
 
 #>> cached information
 # colors     : data used to set 'EZA_COLORS' (fi=00:di=01;34:*.mp3=01;36)
