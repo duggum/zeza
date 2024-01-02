@@ -85,7 +85,7 @@ unset file
 #<<
 
 # colorful tag for plugin-specific console output --> '[zeza]:'
-ZEZA[OUTPUT_TAG]=$(printf "%b[%bzeza%b]:%b" "$wht" "$(z256 f 214)" "$wht" "$rst")
+ZEZA[OUTPUT_TAG]="${wht}[$(z256 f 214)zeza${wht}]:$rst"
 
 # save a lot of keystrokes...
 local tag="$ZEZA[OUTPUT_TAG]"

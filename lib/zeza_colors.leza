@@ -188,8 +188,8 @@ rbg="\e[49m"        # reset background to default
 #>> 256 color prefixes
 # returns a 256-color escape sequence (e.g. \e[38;5;137m) or fails silently if
 # invalid arguments are provided
-# @arg mode: string   - the color mode to set (f: foreground, b: background)
-# @arg color: int     - the desired color from the 256 color palette
+# @arg $1 string mode - the color mode to set (f: foreground, b: background)
+# @arg $2 int color - the desired color from the 256 color palette
 # usage: call using command subtitution: "$(z256 f 137)"
 #<<
 function z256() {
@@ -246,6 +246,7 @@ function zrgb() {
         shift
 
         # validate step 2
+        local n
         for n in "$@" ; do
             [[ "$n" =~ ^[[:digit:]]+$ ]] || return
         done
