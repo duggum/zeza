@@ -5,13 +5,15 @@ get it for your operating system.
 
 ![eza default demo](assets/eza_demo.png "a demo directory listing using eza")
 
+## Table of Contents
+
 - [Features](#features)
 - [Installation](#installation)
 - [Aliases](#aliases)
 - [Commands](#commands)
 - [Customization](#customization)
-- [Learn More](#learn-more)
 - [Code Documentation](#code-documentation)
+- [Learn More](#learn-more)
 
 ## Features
 
