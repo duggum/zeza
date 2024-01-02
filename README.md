@@ -5,6 +5,8 @@ get it for your operating system.
 
 ![eza default demo](assets/eza_demo.png "a demo directory listing using eza")
 
+[TODO](TODO.md)
+
 ## Table of Contents
 
 - [Features](#features)
