@@ -1,4 +1,4 @@
-# one entry per line in the form: code=description
+# one entry per line in the form: code=ANSI color sequence
 # comments are preceded by a '#'
 # '#>>' and '#<<' denote a folding region in VS Code
 # see: https://github.com/eza-community/eza/blob/main/man/eza_colors.5.md
