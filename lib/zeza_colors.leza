@@ -118,6 +118,7 @@ inv="\e[7m"         # set inverse
 # hid="\e[8m"         # set hidden/not visible (not widely supported)
 # str="\e[9m"         # set strikethrough (not widely supported)
 # dund="\e[21m"       # set double underline (not widely supported)
+#-------------------------------------------------------------------------------
 #<<
 
 #>> reset effects
@@ -131,6 +132,7 @@ rinv="\e[27m"       # reset inverse
 # OPT: these are not widely supported - uncomment to use
 # rhid="\e[28m"       # reset hidden/invisible (not widely supported)
 # rstr="\e[29m"       # reset strikethrough (not widely supported)
+#-------------------------------------------------------------------------------
 #<<
 
 #>> set normal fg colors
