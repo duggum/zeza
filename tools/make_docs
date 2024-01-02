@@ -1,0 +1,41 @@
+#!/usr/bin/env zsh
+#>>
+# make_docs - create markdown documentation files using 'shdoc'
+#             see: https://github.com/reconquest/shdoc
+#
+# usage: make_docs
+#<<
+
+# shdoc alias
+alias sd='tools/shdoc/shdoc'
+
+function make_docs() {
+
+    # for colorful output
+    builtin source "lib/zeza_colors.leza"
+
+    # save a lot of keystrokes...
+    local tag=$(printf "%b[%bzeza%b]:%b" "$wht" "$(z256 f 214)" "$wht" "$rst")
+
+    # the files to process and the destination
+    local doc_dir="docs"
+    local -A doc_pair
+    doc_pair[zeza.plugin.zsh]="$doc_dir/zeza.md"
+    doc_pair[functions/.zeza_main]="$doc_dir/main.md"
+    doc_pair[lib/zeza_utils.leza]="$doc_dir/utils.md"
+
+    # print a pretty header
+    printf "%b %b%bMake Docs%b\n" "$tag" "$wht" "$und" "$rst"
+    printf "\n"
+
+    # generate documentation
+    local k v
+    for k v in "${(@kv)doc_pair}" ; do
+        printf "\t%b%s %b\t> %b%s%b\n" "$ylw" "$k" "$red" "$cynb" "$v" "$rst"
+        sd < "$k" > "$v"
+    done
+
+    printf "\n"
+}
+
+make_docs

@@ -1,0 +1,623 @@
+#>>
+# Copyright (c) 2023 David Jopson
+#
+# @name zeza_utils
+# @brief Utility functions for the zeza plugin
+# @description
+#   This library provides utility functions for the zeza plugin. The functions
+#   are arranged in two categories:
+#       1. command execution and error handling
+#       2. state management
+#
+#   ### Documentation
+#       * [README](../README.md)
+#       * [zeza](zeza.md)
+#       * [zeza-main](main.md)
+
+#<<
+
+# save some keystrokes
+local tag="$ZEZA[OUTPUT_TAG]"
+
+#-------------------------------------------------------------------------------
+# COMMAND EXECUTION AND ERROR HANDLING
+#-------------------------------------------------------------------------------
+
+# @section Command Execution and Error Handling
+# @description functions used for command execution and error handling
+
+#>>
+# @description
+#   .zeza-file-system-error - print error messages related to read/write failures
+#
+#   usage: `.zeza-file-system-error OPERATION PATH MESSAGE`
+#
+# @example
+#   .zeza-file-system-error read "$config_file" "Could not read $config_file"
+#
+#   @arg $1 string OPERATION - 'read' | 'write'
+#   @arg $2 string PATH - the file or directory path
+#   @arg $3 string MESSAGE - the error message to display
+#
+# @exitcode 0 if successful
+#
+# @stderr error messages formatted as follows:
+#   * File system <OPERATION> error
+#   * Unable to <OPERATION> [from | to] <PATH>
+#   * Error: <MESSAGE>
+#<<
+function .zeza-file-system-error() {
+
+    # get your grammar right
+    local text
+    [[ $1 = "read" ]] && text="$1 from"
+    [[ $1 = "write" ]] && text="$1 to"
+
+    # print messages
+    printf "%b %bFile system %s error!%b\n" "$tag" "$red" "$1" "$rst" 1>&2
+    printf "%b %bUnable to %s: %b%s %b\n" "$tag" "$red" "$text" "$cyn" "$2" "$rst" 1>&2
+    [[ -n "$3" ]] && printf "%b %bError: %b%s%b\n" "$tag" "$red" "$wht" "$3" "$rst" 1>&2
+    printf "\n"
+}
+
+#>>
+# @description
+#   .zeza-run-command - runs a command and captures STDOUT, STDERR and the exit
+#                       status of the given command
+#
+#   Adapted from [a script](https://gist.github.com/romkatv/605b8ae4499458565e13f715abbd2636)
+#       by [Roman Perepelitsa](https://github.com/romkatv)<br>
+#   Released under the [MIT license](https://opensource.org/license/mit/) per
+#       [this comment](https://gist.github.com/romkatv/605b8ae4499458565e13f715abbd2636?permalink_comment_id=4801935#gistcomment-4801935)
+#
+#   usage: `.zeza-run-command COMMAND [OPTIONS] ARGS`
+#
+# @example
+#   .zeza-run-command mkdir -p "$dest"
+#
+# @arg $1 string COMMAND - the command to run
+# @arg $@ string OPTIONS/ARGS - the command options/arguments
+#
+# @set $ZEZA[CMD_OUT] string STDOUT output
+# @set $ZEZA[CMD_ERR] string STDERR output
+#
+# @exitcode the command exit status
+#<<
+function .zeza-run-command() {
+    'builtin' 'local' '__erc'
+    __erc="$(
+        __erc="$( ("$@") || __erc="$?"; 'builtin' 'printf' '%3d' "$__erc")" 2>&1 ||
+            'builtin' 'printf' '-v' '__erc' '%3d' "$?"
+        'builtin' 'unsetopt' 'multibyte'
+        'builtin' 'printf' '%s%18d' "$__erc" "${#__erc}"
+    )" || 'builtin' 'printf' '-v' '__erc' '%3d%18d' "$?" '3'
+    'builtin' 'emulate' '-L' 'zsh' '-o' 'no_multibyte'
+    'builtin' 'local' '-i' n='__erc[-18,-1]'
+    # adaptation to remove trailing whitespace and save output to the ZEZA array
+    ZEZA[CMD_OUT]="${__erc[-n-18,-22]%[[:space:]]}"
+    ZEZA[CMD_ERR]="${__erc[1,-n-19]%[[:space:]]}"
+    #! original code
+    #! 'builtin' 'local' 'a' 'reply'
+    #! 'builtin' 'set' '-A' 'reply' "$__erc[-n-18,-22]" "$__erc[1,-n-19]"
+    'builtin' 'return' '__erc[-21,-19]'
+}
+
+#-------------------------------------------------------------------------------
+# STATE MANAGEMENT
+#-------------------------------------------------------------------------------
+
+# @section State Management
+# @description functions used to manage the state of the zeza plugin
+
+#>>
+# @description
+#   .zeza-load-codes - uses `sed` to parse the eza color code description file
+#                      and sets the the ZEZA[CODES] state variable
+#
+#   This only needs to be run at plugin load since the code and description data
+#   only changes when supported codes are added or removed from eza itself
+#
+#   usage: `.zeza-load-codes`
+#
+# @example
+#   .zeza-load-codes
+#
+# @noargs
+#
+# @set $ZEZA[CODES] string color code and description data (e.g. `ln=symbolic link`)
+#
+# @exitcode 0 if successful
+# @exitcode 66 on file read error
+#
+# @stderr file read error message
+#
+# @see [.zeza-file-system-error](#zezafilesystemerror)
+#<<
+function .zeza-load-codes() {
+
+    #>> sed regex used below (POSIX mode for max compatibility):
+    # /^[[:blank:]]*#/d                     # remove full comment lines
+    # /^[[:blank:]]*$/d                     # remove blank lines
+    # s/[[:blank:]]*#.*$//                  # remove comments at end of line
+    # s/^[[:blank:]]*//g                    # remove whitespace at line start
+    # s/[[:blank:]]*=[[:blank:]]*[\"]/=/g   # remove whitespace around '='
+    # s/[\"]//g                             # remove double quotes
+    #<<
+
+    # load the code data
+    .zeza-run-command sed --posix \
+        '/^[[:blank:]]*#/d;/^[[:blank:]]*$/d;s/[[:blank:]]*#.*$//;s/^[[:blank:]]*//g;s/[[:blank:]]*=[[:blank:]]*/=/g;s/["]//g' \
+        "$ZEZA[CODES_FILE]"
+    if [[ $? -eq 0 ]] ; then
+        ZEZA[CODES]="$ZEZA[CMD_OUT]"
+    else
+        +zeza_file_system_error "read" "$ZEZA[CODES_FILE]" "$ZEZA[CMD_ERR]"
+        return 66
+    fi
+    return 0
+}
+
+
+#>>
+# @description
+#   .zeza-load-settings - uses `sed` to parse an eza configuration file and sets
+#                         the ZEZA[SETTINGS] state variable
+#
+#   This should be run whenever changes are made to the configuration file or the
+#   file itself has changed (e.g. switching to default mode)
+#
+#   usage: `.zeza-load-settings`
+#
+# @example
+#   .zeza-load-settings
+#
+# @noargs
+#
+# @set $ZEZA[SETTINGS] string color assignment settings (e.g `di=01;34`)
+#
+# @exitcode 0 if successful
+# @exitcode 66 on file read error
+#
+# @stderr file read error message
+#
+# @see [.zeza-file-system-error](#zezafilesystemerror)
+#<<
+function .zeza-load-settings() {
+
+    # load the settings data
+    .zeza-run-command sed --posix \
+        '/^[[:blank:]]*#/d;/^[[:blank:]]*$/d;s/[[:blank:]]*#.*$//;s/^[[:blank:]]*//g;s/[[:blank:]]*=[[:blank:]]*/=/g;s/["]//g' \
+        "$ZEZA[CURRENT_SETTINGS]"
+    if [[ $? -eq 0 ]] ; then
+        ZEZA[SETTINGS]="$ZEZA[CMD_OUT]"
+    else
+        +zeza_file_system_error "read" "$ZEZA[CURRENT_SETTINGS]" "$ZEZA[CMD_ERR]"
+        return 66
+    fi
+    return 0
+}
+
+#>>
+# @description
+#   .zeza-load-ezacolors - reads a color settings string from the cache and sets
+#                          the ZEZA[COLORS] state variable and the EZA_COLORS
+#                          environment variable
+#
+#   This should be run whenever changes are made to the configuration file or the
+#   file itself has changed (e.g. switching to default mode)
+#
+#   usage: `.zeza-load-ezacolors`
+#
+# @example
+#   .zeza-load-ezacolors
+#
+# @noargs
+#
+# @set $ZEZA[COLORS] string the complete color setting string used to set EZA_COLORS (e.g. `fi=00:di=01;34:ln=36`)
+#
+# @exitcode 0 if successful
+# @exitcode 66 on file read error
+#
+# @stderr file read error message
+#
+# @see [.zeza-file-system-error](#zezafilesystemerror)
+#<<
+function .zeza-load-ezacolors() {
+
+    # load the EZA_COLORS string from cache if it exists
+    if [[ -r "$ZEZA[EZA_COLORS_CACHE]" ]]; then
+        .zeza-run-command cat "$ZEZA[EZA_COLORS_CACHE]"
+        if [[ $? -eq 0 ]] ; then
+            # only overwrite if the config file contained something
+            if [[ -n $ZEZA[CMD_OUT] ]] ; then
+                ZEZA[COLORS]="$ZEZA[CMD_OUT]"
+                export EZA_COLORS="$ZEZA[COLORS]"
+            fi
+        else
+            +zeza_file_system_error "read" "$ZEZA[EZA_COLORS_CACHE]" "$ZEZA[CMD_ERR]"
+            return 66
+        fi
+    fi
+    return 0
+}
+
+#>>
+# @description
+#   .zeza-cache-backup - performs operations related to the cached configuration
+#                        backup file
+#
+#   Three options are available based on the operation requested:
+#       1. no op: move the existing user configuration to the cache directory
+#       2. `delete`: delete the cached backup file
+#       3. `restore`: restore the cached backup file to a given directory
+#
+#   usage: `.zeza-cache-backup [OPERATION] [PATH]`
+#
+# @example
+#   .zeza-cache-backup
+#   .zeza-cache-backup restore "$dest"
+#
+# @arg $1 string OPERATION - the operation to be performed (`delete` | `restore`)
+# @arg $2 path PATH - where the backup file should be restored to or deleted from
+#
+# @exitcode 0 if successful
+# @exitcode 73 on file write error
+#
+# @stdout confirmation of the requested operation
+# @stderr file write error message
+#
+# @see [.zeza-file-system-error](#zezafilesystemerror)
+#<<
+function .zeza-cache-backup() {
+
+    if [[ $# -eq 0 ]]; then
+        # mv config file to backup; error on failure
+        printf "%b %bBacking up the user configuration..." "$tag" "$wht"
+        .zeza-run-command /usr/bin/mv "$ZEZA[CURRENT_SETTINGS]" "$ZEZA[USER_CONFIG_BU]"
+        if [[ $? -ne 0 ]] ; then
+            printf "\n"
+            +zeza_file_system_error "write" "$ZEZA[USER_CONFIG_BU]" "$ZEZA[CMD_ERR]"
+            return 73
+        fi
+    elif [[ "$1" = "delete" ]] ; then
+        # delete the backup cache
+        printf "%b %bRemoving the cached backup file..." "$tag" "$wht"
+        .zeza-run-command /usr/bin/rm -f "$ZEZA[USER_CONFIG_BU]"
+        if [[ $? -ne 0 ]] ; then
+            printf "\n"
+            +zeza_file_system_error "write" "$ZEZA[USER_CONFIG_BU]" "$ZEZA[CMD_ERR]"
+            return 73
+        fi
+    elif [[ $# -eq 2 && "$1" = "restore" ]] ; then
+        # restore to the provided destination
+        printf "%b %bRestoring backup to %b%s%b..." "$tag" "$wht" "$cyn" "$2" "$wht"
+        .zeza-run-command /usr/bin/mv "$ZEZA[USER_CONFIG_BU]" "$2"
+        if [[ $? -ne 0 ]] ; then
+            printf "\n"
+            +zeza_file_system_error "write" "$2" "$ZEZA[CMD_ERR]"
+            return 73
+        fi
+    fi
+    printf "%bDONE%b\n" "$grn" "$rst"
+    return 0
+}
+
+#>>
+# @description
+#   .zeza-delete-cache-file - deletes the requested cache file
+#
+#   The following cache file types are valid:
+#       1. `deafult`: ZEZA[DEFAULT_CACHE] -denotes 'DEFAULT' mode
+#       2. `eza_colors`: ZEZA[EZA_COLORS_CACHE]- maintains the EZA_COLORS variable state
+#       3. `nocolor`: ZEZA[NO_COLOR_CACHE] - denotes 'NO COLOR' mode
+#       4. `user_cfg`: ZEZA[USER_CONFIG_CACHE] - maintains the location of the user configuration file
+#
+#   usage: `.zeza-delete-cache-file TYPE`
+#
+# @example
+#   .zeza-delete-cache-file default
+#   .zeza-delete-cache-file eza_colors nocolor user_cfg
+#
+# @arg $@ string TYPE - the file type(s) top be deleted
+#
+# @exitcode 0 if successful
+#
+# @stdout confirmation of the requested operation
+#<<
+function .zeza-delete-cache-file() {
+
+    local arg
+    # delete each file requested
+    for arg in "${@}"; do
+        case "$arg" in
+            "default")
+                printf "%b %bDisabling '%s' mode..." "$tag" "$wht" "$arg:u"
+                rm -f "$ZEZA[DEFAULT_CACHE]"
+                ;;
+            "eza_colors")
+                printf "%b %bClearing '%s'..." "$tag" "$wht" "$arg:u"
+                unset EZA_COLORS
+                ZEZA[COLORS]=""
+                rm -f "$ZEZA[EZA_COLORS_CACHE]"
+                ;;
+            "nocolor")
+                arg="${$(echo "$arg" | sed 's/_/ /'):u}"
+                printf "%b %bDisabling '%s' mode..." "$tag" "$wht" "$arg"
+                rm -f "$ZEZA[NO_COLOR_CACHE]"
+                ;;
+            "user_cfg")
+                printf "%b %bClearing user config cache..." "$tag" "$wht"
+                rm -f "$ZEZA[USER_CONFIG_CACHE]"
+                ;;
+        esac
+        printf "%bDONE%b\n" "$grn" "$rst"
+    done
+    return 0
+}
+
+#>>
+# @description
+#   .zeza-enable-mode - creates a cache file to denote the setting of 'DEFAULT'
+#                       or 'NO COLOR' mode, or the setting of the 'reset' flag
+#                       in the EZA_COLORS environment variable
+#
+#   usage: `.zeza-enable-mode MODE`
+#
+# @example
+#   .zeza-enable-mode default
+#   .zeza-enable-mode nocolor
+#   .zeza-enable-mode reset
+#
+# @arg $1 string MODE - the mode file to create
+#
+# @exitcode 0 if successful
+# @exitcode 73 on file write error
+#
+# @stdout confirmation of the requested operation
+# @stderr file write error message
+#
+# @see [.zeza-file-system-error](#zezafilesystemerror)
+#<<
+function .zeza-enable-mode() {
+
+    # format the arg (no '_' and uppercase)
+    local arg="${$(echo "$1" | sed 's/_/ /'):u}"
+    local msg=">> You have entered the $arg zone!\n>> Do not delete this file!"
+
+    printf "%b %bEnabling '%s' mode..." "$tag" "$wht" "$arg"
+    case "$1" in
+        "nocolor")
+            .zeza-run-command /usr/bin/touch "$ZEZA[NO_COLOR_CACHE]"
+            if [[ $? -ne 0 ]] ; then
+                printf "\n"
+                +zeza_file_system_error write "$ZEZA[NO_COLOR_CACHE]" "$ZEZA[CMD_ERR]"
+                return 73
+            fi
+            print "$msg" > "$ZEZA[NO_COLOR_CACHE]"
+            ;;
+        "default")
+            .zeza-run-command /usr/bin/touch "$ZEZA[DEFAULT_CACHE]"
+            if [[ $? -ne 0 ]] ; then
+                printf "\n"
+                +zeza_file_system_error write "$ZEZA[DEFAULT_CACHE]" "$ZEZA[CMD_ERR]"
+                return 73
+            fi
+            print "$msg" > "$ZEZA[DEFAULT_CACHE]"
+            ;;
+        "reset")
+            .zeza-run-command /usr/bin/touch "$ZEZA[RESET_CACHE]"
+            if [[ $? -ne 0 ]] ; then
+                printf "\n"
+                +zeza_file_system_error write "$ZEZA[RESET_CACHE]" "$ZEZA[CMD_ERR]"
+                return 73
+            fi
+            print "$msg" > "$ZEZA[RESET_CACHE]"
+            ;;
+    esac
+    printf "%bDONE%b\n" "$grn" "$rst"
+
+    return 0
+}
+
+#>>
+# @description
+#   .zeza-update-eza - updates EZA_COLORS and related zeza state variables
+#
+#   The following mode arguments are valid:
+#       1. none: EZA_COLORS is set from the configuration file
+#       2. `nocolor`: reset flag is prepended and all color codes are set to '00'
+#       3. `reset`: reset flag is prepended to the existing EZA_COLORS
+#
+#   usage: `.zeza-update-eza [MODE]`
+#
+# @example
+#   .zeza-update-eza
+#   .zeza-update-eza reset
+#   .zeza-update-eza nocolor
+#
+# @arg $1 string MODE - the mode to set EZA_COLORS for (none | `nocolor` | `reset`)
+#
+# @exitcode 0 if successful
+# @exitcode 73 on file write error
+#
+# @stdout confirmation of the requested operation
+# @stderr file write error message
+#
+# @see [.zeza-file-system-error](#zezafilesystemerror)
+#<<
+function .zeza-update-eza() {
+
+    printf "%b %bUpdating EZA_COLORS..." "$tag" "$wht"
+    unset EZA_COLORS
+    ZEZA[COLORS]=""
+
+    # start with reset if requested
+    if [[ "$1" =~ ("reset"|"nocolor") ]] ; then
+        ZEZA[COLORS]="reset"
+    fi
+
+    # no color mode
+    if [[ "$1" = "nocolor" ]] ; then
+        # since the user config may not have all codes, let's use the code file
+        # as it contains ALL the codes currently in use by eza
+        local desc code
+        for desc in ${(@f)ZEZA[CODES]} ; do
+            code=${desc%\=*}
+            ZEZA[COLORS]+=":$code=00"
+        done
+
+    # use custom config
+    else
+        local setting
+        for setting in ${(@f)ZEZA[SETTINGS]} ; do
+            # check if empty to avoid leading colon
+            if [[ -n "$ZEZA[COLORS]" ]] ; then
+                ZEZA[COLORS]+=":$setting"
+            else
+                ZEZA[COLORS]+="$setting"
+            fi
+        done
+    fi
+
+    # store colors in cache file & export
+    .zeza-run-command /usr/bin/touch "$ZEZA[EZA_COLORS_CACHE]"
+    if [[ $? -ne 0 ]] ; then
+        printf "\n"
+        +zeza_file_system_error write "$ZEZA[EZA_COLORS_CACHE]" "$ZEZA[CMD_ERR]"
+        return 73
+    fi
+    printf "$ZEZA[COLORS]" > "$ZEZA[EZA_COLORS_CACHE]"
+    export EZA_COLORS="$ZEZA[COLORS]"
+    printf "%bDONE%b\n" "$grn" "$rst"
+
+    return 0
+}
+
+#>>
+# @description
+#   .zeza-256-colors - print a series of color grids covering the 256 color palette
+#
+#   Adapted from [Tim Carry's script](http://blog.pixelastic.com/2012/09/06/spectrum-script-terminal-256-colors/) posted on his blog.
+#
+#   usage: `.zeza-256-colors`
+#
+# @example
+#   .zeza-256-colors
+#
+# @noargs
+#
+# @exitcode 0 if successful
+#
+# @stdout a series of color grids covering the 256 color palette
+#<<
+function .zeza-256-colors() {
+
+    printf "\n"
+
+    local space="    "  # spaces for color swatch
+    local lines=6       # number of color lines per block
+    local blocks=6      # number of blocks per terminal line
+    local line=0        # current line in a block
+    local filled=0      # how many blocks are filled
+    local -A grid       # stores the color grid
+
+    # We want to display the blocks side by side, so it means we'll have to create
+    # each line one my one then display all of them, and after that jump to the
+    # next set of blocks
+    local color j
+    for color in {016..255}; do
+        # Current line in a block
+        line=$(( ($color - 16) % $lines ))
+
+        # Appending the displayed color to the line
+        grid[$line]=$grid[$line]"\e[38;5;${color}m#${color} \e[48;5;${color}m${space}\e[0m  "
+
+        # Counting how many blocks are filled
+        [[ $line = 5 ]] && filled=$(( $filled + 1 ))
+
+        # Enough blocks for this line, display them
+        if [[ $filled = $blocks ]]; then
+            # Reset block counter
+            filled=0;
+            # Display each line
+            for j in {0..5}; do
+                printf "$grid[$j]\n"
+                grid[$j]=""
+            done
+            printf "\n"
+        fi
+    done
+
+    # Display each remaining blocks
+    for j in {0..5}; do
+        printf "$grid[$j]\n"
+        grid[$j]=""
+    done
+
+    printf "\n\n"
+
+    return 0
+}
+
+#>>
+# @description
+#   .zeza-ansi-colors - prints an ANSI color table based on provided options
+#
+#   This is a heavily modified version of the script by Daniel Crisman found in the
+#   [Bash Prompt HOWTO](https://tldp.org/HOWTO/Bash-Prompt-HOWTO/x329.html)
+#
+#   usage: `.zeza-ansi-colors LABEL HEADER FG_COLORS BG_COLORS`
+#
+# @example
+#   .zeza-ansi-colors $label $header fore back
+#
+# @arg $1 string LABEL - the label for the table to be printed
+# @arg $2 string HEADER - the header for the table to be printed
+# @arg $3 array FG_COLORS - the aray of foreground colors to use for the table
+# @arg $4 array BG_COLORS - the aray of background colors to use for the table
+#
+# @exitcode 0 if successful
+#
+# @stdout prints an ANSI color table
+#<<
+function .zeza-ansi-colors() {
+
+    # process the args
+    local label="$1"
+    local header="$2"
+    local -a fore=( "${(@P)3}" )
+    local -a back=( "${(@P)4}" )
+    local spacer="$wht       |                                                                         |$rst"
+    local footer="$wht Color |          Blk     Red     Grn     Ylw     Blu     Mag     Cyn     Wht    |$rst"
+
+    # print table label and background column headers
+    printf "$label\n"
+    printf "$und$header$rst\n"
+    printf "$spacer\n"
+    # for each foreground color code
+    local f
+    for f in "${(@)fore}" ; do
+        # trim spaces from each foreground code to use for actual color
+        # assignment in the table output
+        fg="${f// /}"
+
+        # print the code and sample text
+        printf " %b%s |%b\e[%s  %s  " "$wht" "$f" "$rst" "$fg" "$text"
+
+        # for each background color
+        local b
+        for b in "${(@)back}" ; do
+            # print the sample text in the current fg color
+            printf " \e[%s\e[%s  %s  %b" "$fg" "$b" "$text" "$rst"
+        done
+        printf "  $wht|$rst\n"
+    done
+    printf "$spacer\n"
+    # '\e[53m' is for overlined text and may not be supprted in many terminals
+    # hopefully this just fails silently and nothing shows up
+    # TODO: confirm this behavior
+    printf "\e[53m$footer\n"
+    printf "\n\n"
+
+    return 0
+}

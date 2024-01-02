@@ -1,0 +1,1627 @@
+#!/usr/bin/env zsh
+#>>
+# Copyright (c) 2023 David Jopson
+#
+# @name .zeza_main
+# @brief User-facing functions for the zeza plugin
+# @description
+#   This file provides all of the user-facing commands for the zeza plugin.
+#
+#   The commands are:
+#       * `configure`
+#       * `default`
+#       * `demo`
+#       * `nocolor`
+#       * `refresh`
+#       * `reset`
+#       * `restore`
+#       * `status`
+#       * `tables`
+#
+#   Note: The exit codes used here are based on those found in 'sysexits.h' from
+#         the Standard C Library. See `man sysexits.h` for more information.
+#
+#   Updated for `eza v0.17.0`
+#
+#   ### Documentation
+#       * [README](../README.md)
+#       * [zeza](zeza.md)
+#       * [zeza-utils](utils.md)
+
+#<<
+
+#-------------------------------------------------------------------------------
+# MAIN FUNCTION
+#-------------------------------------------------------------------------------
+
+# @section Main
+# @description the main zeza command
+
+#>>
+# @description
+#   zeza - launches user-facing commands to manage the eza configuration
+#
+#   usage: `zeza COMMAND [OPTIONS]`
+#
+# @example
+#   zeza restore . /home/config/backup/.zeza_config.eza
+#
+# @option -h | --help display help text and exit
+#
+# @arg $1 string COMMAND - the command to run
+# @arg $@ string ARGS - arguments and/or options for the COMMAND
+#
+# @exitcode 0 if successful
+# @exitcode 64 wrong number of arguments
+# @exitcode 69 invalid command, or command not available
+#
+# @stdout help text if -h or --help options were provided
+# @stderr error message and/or help text
+#<<
+function zeza() {
+
+    # source the common function header
+    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
+
+    local help=$(
+        printf "%b %b%bzeza%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t    %ba plugin for managing the custom configuration of 'eza,' the very colorful\n" "$wht"
+        printf "\t    'ls' replacement.\n"
+        printf "\n"
+        printf "\t%busage%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza <%bcommand%b> [%boptions%b]\n" "$itl" "$ritl" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bcommands%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %bhelp%b          print this help message\n" "$itl" "$ritl"
+        printf "\t    %bconfigure%b     generate a customizable configuration file\n" "$itl" "$ritl"
+        printf "\t    %bdefault%b       setup eza to use the default, builtin color configuration\n" "$itl" "$ritl"
+        printf "\t    %bdemo%b          print color codes and descriptions in their assigned colors\n" "$itl" "$ritl"
+        printf "\t    %bnocolor%b       setup eza to display completely colorless output\n" "$itl" "$ritl"
+        printf "\t    %brefresh%b       refresh zeza to reflect changes made to a configuration\n" "$itl" "$ritl"
+        printf "\t    %breset%b         prepends the 'reset' flag to the EZA_COLORS environment variable\n" "$itl" "$ritl"
+        printf "\t    %brestore%b       restore a previous custom configuration file\n" "$itl" "$ritl"
+        printf "\t    %bstatus%b        show the current status of the zeza plugin environment\n" "$itl" "$ritl"
+        printf "\t    %btables%b        show formatted color tables using the terminal color scheme\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bcommon options%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %b-h, --help%b    display usage information\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bexample%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza status\n"
+        printf "\t    zeza refresh -d\n"
+        printf "\t    zeza restore /home/user /my/backup/config/.zeza_custom.eza%b\n" "$rst"
+    )
+
+    # display help and exit
+    if [[ "$1" =~ ^(-h|--help)$ ]] ; then
+        printf "\n"
+        print $help
+        printf "\n"
+        return 0
+    fi
+    # if not enough args, help and exit with error
+    if [[ $# -eq 0 ]]; then
+        printf "\n"
+        printf "%b %bYou must provide a command name%b\n" "$tag" "$red" "$rst" 1>&2
+        printf "\n"
+        print $help
+        printf "\n"
+        return 64
+    fi
+
+    # capture the actual command from the args
+    local command="$1"
+    shift
+
+    # Subcommand functions start with . so that they don't
+    # appear as completion entries when looking for `omz`
+    if (( ${+functions[.zeza::$command]} )) ; then
+        # call the command passing along remaing args
+        .zeza::$command "$@"
+    else
+        # show help and exit with error
+        printf "\n"
+        printf "%b %bInvalid command name: '$command'%b\n" "$tag" "$red" "$rst" 1>&2
+        printf "\n"
+        print $help
+        printf "\n"
+        return 69
+    fi
+
+    # return whatever code the called command returns
+    return $?
+}
+
+#-------------------------------------------------------------------------------
+# SUB COMMANDS
+#-------------------------------------------------------------------------------
+
+# @section Commands
+# @description commands providing user-facing functionality for zeza
+
+#>>
+# @description
+#   configure - copies the default eza configuration file to the user's home
+#               directory, or to a location of their choosing
+#
+#   usage: `zeza configure [OPTION] | [DESTINATION]`
+#
+# @example
+#   zeza configure /home/user/config/location
+#
+# @option -h | --help display help text and exit
+#
+# @arg $1 path DESTINATION - the location where the configuration file will be stored
+#
+# @exitcode 0 if successful or cancelled
+# @exitcode 66 if color settings and EZA_COLORS fail to load properly
+# @exitcode 73 if configuration file copy failed
+# @exitcode 77 if DESTINATION cannot be created or is not writable
+#
+# @stdin user responses to various prompts
+# @stdout information regarding the configuration process
+# @stderr various error messages depending on the error
+#
+# @see [.zeza::restore](#zezarestore)
+#<<
+function .zeza::configure() {
+
+    # source the common function header
+    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
+
+    local help=$(
+        printf "%b %b%bzeza configure%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t    %bgenerates a customizable configuration file for eza\n" "$wht"
+        printf "\t    default destination/filename: \$HOME/.zeza_custom.eza\n"
+        printf "\n"
+        printf "\t%busage%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza configure [%boption%b] | [%bdest%b]\n" \
+            "$itl" "$ritl" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%boptions%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %b-h, --help%b    display this help and exit\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bargs%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %bdest%b          optional, the full path to where the config will be copied\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bexample%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza configure \n"
+        printf "\t    zeza configure /home/user/config/location%b" "$rst"
+    )
+
+    # display help and exit
+    if [[ "$1" =~ ^(-h|--help)$ ]] ; then
+        print $help
+        printf "\n"
+        return 0
+    fi
+
+    # tracking variables
+    local config_file           # path to the config file to be created
+    local do_copy=false         # tracks copy confirmation
+    local keep_existing=false   # if using an existing config
+    local response              # for user replies
+
+    # if user wants to put config somewhere unique see if it is a writeable location
+    if [[ -n "$1" ]] ; then
+        # get the absolute path (':P')
+        local dir="${1:P}"
+
+        # if directory doesn't exist, ask to create it
+        if [[ ! -d "$dir" ]] ; then
+            printf "\n"
+            printf "%b %bDirectory does not exist, would you like to create it" "$tag" "$wht"
+            read -q "response? (y/N)?"
+            if [[ $response = "y" ]] ; then
+                printf "\n"
+                printf "%b %bCreating directory..." "$tag" "$wht"
+                printf "\n"
+                .zeza-run-command /usr/bin/mkdir -p "$dir"
+                if [[ $? -ne 0 ]] ; then
+                    .zeza-file-system-error write "$dir" "$ZEZA[CMD_ERR]"
+                    return 77
+                fi
+                printf "%bDONE%b\n" "$grn" "$rst"
+            else
+                printf "$cancelled\n"
+                return 0
+            fi
+        fi
+
+        # if dir is writable set it as config file path
+        if [[ -w "$dir" ]] ; then
+            config_file="$dir/$ZEZA[CFG_FILENAME]"
+        else
+            # throw an error
+            printf "\n"
+            .zeza-file-system-error write "$dir" "directory is not writable or permission denied"
+            return 77
+        fi
+    else
+        # use deafult location for custiom config
+        config_file=$HOME/$ZEZA[CFG_FILENAME]
+    fi
+
+    # see if a backup file exists and see what user wants to do
+    if [[ -f "$ZEZA[USER_CONFIG_BU]" ]] ; then
+        printf "%b %bA backup configuration file was found!%b\n" "$tag" "$ylw" "$rst"
+        printf "%b %bYour backup can be restored to: %b%s%b\n" "$tag" "$wht" "$cyn" "$config_file" "$rst"
+        printf "%b %bWhat would you like to do: use (b)ackup, create (n)ew, or (C)ancel" "$tag" "$wht"
+        read -k 1 "response? (b/n/C)?"
+        # ':l"' converts to lowercase
+        if [[ $response:l = "b" ]] ; then
+            .zeza::restore "${config_file:h}"
+            return 0
+        elif [[ $response:l = "n" ]] ; then
+            printf "\n"
+            .zeza-cache-backup delete
+            do_copy=true
+        else
+            printf "$cancelled\n"
+            return 0
+        fi
+    fi
+
+    # see if the currently assigned config file has gone missing, but don't bother
+    # if 'no color' mode is set because there ar no current settings in that mode
+    if [[ ! -f "$ZEZA[CURRENT_SETTINGS]" && ! -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
+        printf "%b %bThe previously set configuration file is missing!%b\n" \
+            "$tag" "$red" "$rst"
+        printf "%b %bHas %b%s %bbeen deleted?%b\n" \
+            "$tag" "$red" "$cyn" "$ZEZA[CURRENT_SETTINGS]" "$red" "$rst"
+
+        printf "%b %bWould you still like to proceed" "$tag" "$wht"
+        read -q "response? (y/N)?"
+        if [[ $response = "y" ]] ; then
+            # reset this to avoid repeating this check if this whole process is
+            # cancelled before a new config file is assigned
+            ZEZA[CURRENT_SETTINGS]=""
+            printf "\n"
+        else
+            printf "$cancelled\n"
+            return 0
+        fi
+    fi
+
+    # tell user where the new config file will be stored
+    printf "%b %bConfiguration file will be %b%s%b\n" \
+        "$tag" "$wht" "$cyn" "$config_file" "$rst"
+
+    # if a config file already exists at this location
+    if [[ -f "$config_file" ]] ; then
+        printf "%b %bA configuration file already exists at that location!%b\n" "$tag" "$ylw" "$rst"
+        printf "%b %bWhat would you like to do: use (e)xisting, (o)verwrite, or (C)ancel" "$tag" "$wht"
+        read -k 1 "response? (e/o/C)?"
+        # (L) converts to lowercase
+        if [[ $response:l = "e" ]] ; then
+            keep_existing=true
+            do_copy=false
+        elif [[ $response:l = "o" ]] ; then
+            do_copy=true
+        else
+            printf "$cancelled\n"
+            return 0
+        fi
+        printf "\n"
+    fi
+
+    # if current settings is set and is NOT the default config
+    if [[ -n "$ZEZA[CURRENT_SETTINGS]" ]] && \
+        [[ "$ZEZA[CURRENT_SETTINGS]" != "$ZEZA[DEFAULTS_FILE]" ]] ; then
+
+        # if new location is different than current location, give user the choice
+        # to keep the previously set configuration or create a new one
+        if [[ "$config_file" != "$ZEZA[CURRENT_SETTINGS]" ]] ; then
+
+            printf "%b %bA previous configuration file exists at %b%s%b\n" \
+                "$tag" "$ylw" "$cyn" "$ZEZA[CURRENT_SETTINGS]" "$rst"
+            printf "%b %bWhat would you like to do: use (e)xisting, create (n)ew, or (C)ancel" \
+                "$tag" "$wht"
+            read -k 1 "response? (e/n/C)?"
+            if [[ $response:l = "e" ]] ; then
+                keep_existing=true
+                do_copy=false
+                config_file="$ZEZA[CURRENT_SETTINGS]"
+                printf "\n"
+            elif [[ $response:l = "n" ]] ; then
+                printf "\n%b %bWould you like to delete the previous configuration file" \
+                    "$tag" "$wht"
+                read -q "response? (y/N)?"
+                if [[ $response = "y" ]] ; then
+                    #remove the old file
+                    printf "\n"
+                    printf "%b %bDeleting previous configuration..." "$tag" "$wht"
+                    rm -f "$ZEZA[CURRENT_SETTINGS]"
+                    printf "%bDONE%b\n" "$grn" "$rst"
+                else
+                    printf "\n%b %bYou should remove old configuration files to avoid confusion.%b\n" \
+                        "$tag" "$ylw" "$rst"
+                fi
+                do_copy=true
+            else
+                printf "$cancelled\n"
+                return 0
+            fi
+        fi
+    fi
+
+    # if we're keeping an existing file just print a msg and move on
+    if [[ $keep_existing = true ]] ; then
+        printf "%b %bExisting file set as current confguration!%b\n" \
+            "$tag" "$grn" "$rst"
+    else
+
+        # get final confirmation to copy if it hasn't already been given
+        if [[ $do_copy = false ]] ; then
+            printf "%b %bCopy the default configuration" "$tag" "$wht"
+            read -q "response? (y/N)?"
+            if [[ $response = "y" ]] ; then
+                do_copy=true
+                printf "\n"
+            else
+                printf "$cancelled\n"
+                return 0
+            fi
+        fi
+
+        # copy the settings file and throw error if it fails
+        printf "%b %bCopying default configuration to %b%s%b..." "$tag" "$wht" "$cyn" "$config_file" "$wht"
+        .zeza-run-command /usr/bin/cp "$ZEZA[DEFAULTS_FILE]" "$config_file"
+        if [[ $? -ne 0 ]] ; then
+            +eza_file_system_error write "$config_file" "$ZEZA[CMD_ERR]"
+            return 73
+        fi
+        printf "%bDONE%b\n" "$grn" "$rst"
+    fi
+
+    # update the cache and environment variables
+    printf "%b %bUpdating cache and environment..." "$tag" "$wht"
+    print "$config_file" > $ZEZA[USER_CONFIG_CACHE]
+    ZEZA[CURRENT_SETTINGS]="$config_file"
+    printf "%bDONE%b\n" "$grn" "$rst"
+
+    # make sure default and no color modes are disabled
+    .zeza-delete-cache-file default nocolor eza_colors
+
+    # update all the settings based on the new config
+    .zeza-load-settings || return $?
+    .zeza-load-ezacolors || return $?
+
+    # set EZA_COLORS using config
+    .zeza-update-eza
+
+    # show updated status
+    .zeza::status
+
+    return 0
+}
+
+#>>
+# @description
+#   default - setup eza to use the default, builtin color configuration
+#
+#   Any user configuration file in use will be backed up to the cache directory
+#   and can be restored using `zeza restore`
+#
+#   usage: `zeza default [OPTION]`
+#
+# @example
+#   zeza default
+#
+# @option -h | --help display help text and exit
+#
+# @noargs
+#
+# @set EZA_COLORS string the environment variable used by eza for colored output generation
+#
+# @exitcode 0 if successful
+# @exitcode 66 if color settings and EZA_COLORS fail to load properly
+# @exitcode 73 if an error occured while backing up the user configuration file
+#
+# @stdin user response to a confirmation prompt
+# @stdout information regarding the process of setting default mode and the zeza
+#         environment status
+# @stderr various error messages depending on the error
+#
+# @see [.zeza::restore](#zezarestore)
+# @see [.zeza::status](#zezastatus)
+#<<
+function .zeza::default() {
+
+    # source the common function header
+    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
+
+    printf "\n"
+
+    local help=$(
+        printf "%b %b%bzeza default%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t    %bsetup eza to use the default, builtin color configuration\n" "$wht"
+        printf "\n"
+        printf "\t%busage%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza default [%boption%b]\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%boptions%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %b-h, --help%b    display this help and exit\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bexample%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza default\n" "$rst"
+    )
+
+    # display help and exit
+    if [[ "$1" =~ ^(-h|--help)$ ]] ; then
+        print $help
+        printf "\n"
+        return 0
+    fi
+
+    # for user replies
+    local response
+
+    if [[ "$1" = "cfg_missing" ]] ; then
+        response="y"
+    else
+        printf "%b %bAre you sure you want to set eza to use its default configuration" "$tag" "$wht"
+        read -q "response? (y/N)?"
+    fi
+    if [[ $response = "y" ]] ; then
+
+        printf "\n"
+
+        # delete cache files
+        .zeza-delete-cache-file eza_colors nocolor user_cfg
+
+        # if current settings are NOT default
+        if [[ "$ZEZA[CURRENT_SETTINGS]" != "$ZEZA[DEFAULTS_FILE]" ]] ; then
+
+            # backup user's config unless called with 'cfg_missing' or 'no color' mode
+            if [[ "$1" != "cfg_missing" && -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
+                .zeza-cache-backup
+                if [[ $? -eq 0 ]] ; then
+                    printf "%b %bUser configuration backed up to...%b%s%b\n" \
+                        "$tag" "$wht" "$cyn" "$ZEZA[USER_CONFIG_BU]" "$rst"
+                else
+                    # return error code from .zeza-cache-backup
+                    return $?
+                fi
+            fi
+            # switch to default config file
+            ZEZA[CURRENT_SETTINGS]="$ZEZA[DEFAULTS_FILE]"
+        fi
+
+        # update all the settings based on the default config
+        .zeza-load-settings || return $?
+        .zeza-load-ezacolors || return $?
+
+        # set deafult mode
+        .zeza-enable-mode default
+
+        # all the information
+        printf "%b %bNote: %bEZA_COLORS is %bnot%b set in default mode. Eza's color output%b\n" \
+            "$tag" "$red" "$wht" "$bld" "$rbld" "$rst"
+        printf "              %bis generated using the program's internal defaults which%b\n" \
+            "$wht" "$rst"
+        printf "              %bcan be seen when you run '%b%bzeza_demo%b%b' while in default mode.%b\n" \
+            "$wht" "$magb" "$itl" "$ritl" "$wht" "$rst"
+
+    else
+        printf "$cancelled"
+    fi
+
+    # show status
+    .zeza::status
+
+    return $?
+}
+
+#>>
+# @description
+#   demo - print eza color codes and their descriptions in their currently assigned colors
+#
+#   usage: `zeza demo [OPTION]`
+#
+# @example
+#   zeza demo
+#
+# @option -h | --help display help text and exit
+#
+# @noargs
+#
+# @stdout all eza color codes and custom extensions printed in their corresponding
+#         colors based on the current configuration
+# @stderr various error messages depending on where in the function the error occurred
+#
+# @exitcode 0 if successful
+# @exitcode 66 if temporary demo file cannot be read
+# @exitcode 73 if temporary demo file cannot be created
+# @exitcode 78 if EZA_COLORS is not set
+#
+# @see [eza_colors(5)](https://github.com/eza-community/eza/blob/main/man/eza_colors.5.md)
+#<<
+function .zeza::demo() {
+
+    # source the common function header
+    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
+
+    printf "\n"
+
+    local help=$(
+        printf "%b %b%bzeza demo%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t    %bprint eza color codes and their descriptions in their currently assigned colors\n" "$wht"
+        printf "\n"
+        printf "\t%busage%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza demo [%boption%b]\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%boptions%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %b-h, --help%b    display this help and exit\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bexample%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza demo\n" "$rst"
+    )
+
+    # display help and exit
+    if [[ "$1" =~ ^(-h|--help)$ ]] ; then
+        print $help
+        printf "\n"
+        return 0
+    fi
+
+    # if EZA_COLORS is set, or we are in default mode
+    if [[ -n "${EZA_COLORS}" || -f "$ZEZA[DEFAULT_CACHE]" ]] ; then
+
+        # necessary vars
+        local code color desc
+        local -a ezacodes=( "${(@f)ZEZA[CODES]}" ) # eza color codes and descriptions
+        local -a ezacolors=( "${(@f)ZEZA[SETTINGS]}" ) # current settings from config file
+
+        # display output label
+        printf "\n"
+        printf "%b %b%bCurrent Settings Demo" "$tag" "$(z256 f 246)" "$und"
+        [[ -f "$ZEZA[DEFAULT_CACHE]" ]] && printf " (DEFAULT MODE)"
+        printf "%b\n\n"  "$rst"
+
+        # if the column command is available (should be on most *nix systems)
+        if (( $+commands[column] )); then
+
+            # use temp file to hold data
+            local outfile="$TMPDIR/display.txt"
+            if ! touch $outfile ; then
+                .zeza-file-system-error write "$outfile" "unable to create temporary demo file"
+                return 73
+            fi
+
+            # write color info to temp file
+            print "${magb}${itl}Code/File Ext|Color|Description${rst}" > $outfile
+            print "${wht}-------------|-------------|------------------------------------${rst}" >> $outfile
+            local e
+            for e in ${(@)ezacolors} ; do
+                code=${e%\=*}
+                color=${e#*\=}
+                desc=${ezacodes[$ezacodes[(I)$code*]]#*\=}
+                [[ -z $desc ]] && desc="custom setting"
+                print "${whtb}${code}|\e[${color}m${color}${rst}|\e[${color}m${desc}${rst}" >> $outfile
+            done
+
+            # 'pipefail' prevents errors in a pipeline (|) from being masked
+            setopt pipefail
+            # display as table
+            if ! ( cat $outfile | column -s "|" -t ) ; then
+                .zeza-file-system-error read "$outfile" "unable to process demo temp file"
+                return 66
+            fi
+            unsetopt pipefail
+
+            # clean up - it's not the end of world if this fails since 'rm -f' is
+            # silent and the temp file will be deleted upon logout/login anyway
+            rm -f $outfile
+        else
+            # 'printf' output isn't as pretty as 'column', but gets the job done
+            printf "\e[03;95m%-13s   %-13s   %-36s\e[0m\n" "Code/File Ext" "Color" "Description"
+            printf "\e[90m%-13s   %-13s   %-36s\e[0m\n" \
+                "-------------" "-------------" "------------------------------------"
+            local e
+            for e in ${(@)ezacolors} ; do
+                code=${e%\=*}
+                color=${e#*\=}
+                desc=${ezacodes[$ezacodes[(I)$code*]]#*\=}
+                [[ -z $desc ]] && desc="custom setting"
+                printf "\e[97m%-13s\e[0m   \e[%sm%-13s\e[0m   \e[%sm%-36s\e[0m\n" \
+                    "${code}" "${color}" "${color}" "${color}" "${desc}"
+            done
+        fi
+        printf "\n"
+    else
+        printf "\n"
+        printf "%b %bEZA_COLORS is not set!%b\n" "$tag" "$red" "$rst" 1>&2
+        printf "\n"
+        return 78
+    fi
+    return 0
+}
+
+#>>
+# @description
+#   nocolor - setup eza to display completely colorless output
+#
+#   Disables all color output from eza by prepending the `reset` code to EZA_COLORS
+#   and setting all color codes to 00. Any user configuration file in use will be
+#   backed up to the cache directory and can be restored using `zeza restore`
+#
+#   **Note**: running this command is NOT the same as setting the 'NO_COLOR'
+#   environment variable as described in the eza man pages.
+#
+#   usage: `zeza nocolor [OPTION]`
+#
+# @example
+#   zeza nocolor
+#
+# @option -h | --help display help text and exit
+#
+# @noargs
+#
+# @set EZA_COLORS string the environment variable used by eza for colored output generation
+#
+# @exitcode 0 if successful
+# @exitcode 73 if an error occured while backing up the user configuration file
+#
+# @stdin user response to a confirmation prompt
+# @stdout information regarding the process of setting no color mode and the zeza
+#         environment status
+# @stderr various error messages depending on the error
+#
+# @see [.zeza::status](#zezastatus)
+# @see [eza man pages](https://github.com/eza-community/eza/tree/main/man)
+#<<
+function .zeza::nocolor() {
+
+    # source the common function header
+    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
+
+    printf "\n"
+
+    local help=$(
+        printf "%b %b%bzeza nocolor%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t    %bsetup eza to display completely colorless output\n" "$wht"
+        printf "\n"
+        printf "\t    %bnote: this command is NOT the same as setting the 'NO_COLOR'\n"
+        printf "\t    environment variable as described in the eza man pages.\n"
+        printf "\n"
+        printf "\t%busage%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza nocolor [%boption%b]\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%boptions%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %b-h, --help%b    display this help and exit\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bexample%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza nocolor\n" "$rst"
+    )
+
+    # display help and exit
+    if [[ "$1" =~ ^(-h|--help)$ ]] ; then
+        print $help
+        printf "\n"
+        return 0
+    fi
+
+    local response
+
+    # fair warning
+    printf "%b %bWarning: %bThis will remove %b%b%bALL%b%b color output from eza.%b\n" \
+        "$tag" "$ylw" "$wht" "$red" "$bld" "$und" "$rst" "$wht" "$rst"
+    printf "%b %bWould you like to proceed" "$tag" "$wht"
+    read -q "response? (y/N)?"
+    if [[ $response:l = "y" ]] ; then
+        printf "\n"
+
+        # make sure default mode is disabled
+        .zeza-delete-cache-file default eza_colors user_cfg
+
+        # if current settings are NOT default
+        if [[ "$ZEZA[CURRENT_SETTINGS]" != "$ZEZA[DEFAULTS_FILE]" ]] ; then
+
+            # backup the user's config
+            .zeza-cache-backup
+            if [[ $? -eq 0 ]] ; then
+                printf "%b %bUser configuration backed up to...%b%s%b\n" \
+                    "$tag" "$wht" "$cyn" "$ZEZA[USER_CONFIG_BU]" "$rst"
+            else
+                # return error code from .zeza-cache-backup
+                return $?
+            fi
+        fi
+
+        # set current settings to empty
+        ZEZA[CURRENT_SETTINGS]=""
+
+        # update EZA_COLORS with no color
+        .zeza-update-eza nocolor
+
+        # switch to no color mode
+        .zeza-enable-mode nocolor
+    else
+        printf "$cancelled"
+    fi
+
+    # show status
+    .zeza::status
+
+    return 0
+}
+
+#>>
+# @description
+#   refresh - refresh zeza to reflect changes made to a configuration file
+#
+#   usage: `zeza refresh [OPTION]`
+#
+# @example
+#   zeza refresh --demo
+#
+# @option -h | --help display help text and exit
+# @option -d | --demo display demo output after refresh
+#
+# @noargs
+#
+# @set EZA_COLORS string the environment variable used by eza for colored output generation
+#
+# @exitcode 0 if successful
+# @exitcode 64 if executed while in 'default or 'no color' mode
+# @exitcode 66 if color settings and EZA_COLORS fail to load properly
+#
+# @stdout function status updates and the zeza demo if the --demo option was provided
+# @stderr various error messages depending on the error
+#
+# @see [.zeza::demo](#zezademo)
+#<<
+function .zeza::refresh() {
+
+    # source the common function header
+    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
+
+    printf "\n"
+
+    local help=$(
+        printf "%b %b%bzeza refresh%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t    %brefresh zeza to reflect changes made to a configuration file\n" "$wht"
+        printf "\n"
+        printf "\t%busage%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza refresh [%boption%b]\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%boptions%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %b-h, --help%b    display this help and exit\n" "$itl" "$ritl"
+        printf "\t    %b-d, --demo%b    display demo output after refresh\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bexample%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza refresh --demo\n" "$rst"
+    )
+
+    # display help and exit
+    if [[ "$1" =~ ^(-h|--help)$ ]] ; then
+        print $help
+        printf "\n"
+        return 0
+    fi
+
+    # only refresh if NOT in default or no color modes
+    if [[ ! -f $ZEZA[DEFAULT_CACHE] && ! -f $ZEZA[NO_COLOR_CACHE] ]] ; then
+        # update all the settings based on the config
+        .zeza-load-settings || return $?
+        .zeza-load-ezacolors || return $?
+
+        # set EZA_COLORS using config
+        .zeza-update-eza
+        printf "\n"
+
+        # show demo if desired
+        [[ "$1" =~ ^(-d|--demo)$ ]] && .zeza::demo
+    else
+        printf "%b %bRefresh is only available for custom configuration files!%b\n" \
+            "$tag" "$red" "$rst" 1>&2
+        printf "%b %bRun '%b%bzeza configure%b%b' to create a custom configuration.%b\n" \
+            "$tag" "$wht" "$magb" "$itl" "$ritl" "$wht" "$rst" 1>&2
+        .zeza::configure --help
+        return 64
+    fi
+
+    return 0
+}
+
+#>>
+# @description
+#   reset - prepends the 'reset' flag to the EZA_COLORS environment variable
+#
+#   This disables eza's color assignments for standard file extensions.
+#
+#   usage: `zeza reset [OPTION]`
+#
+# @example
+#   zeza reset
+#   zeza reset -u
+#
+# @option -h | --help display help text and exit
+# @option -u | --unset remove the reset flag from EZA_COLORS
+#
+# @noargs
+#
+# @set EZA_COLORS string the environment variable used by eza for colored output generation
+#
+# @exitcode 0 if successful or cancelled
+# @exitcode 69 if reset flag is already set
+# @exitcode 73 if an error occured while backing up the user configuration file
+#
+# @stdin user response to a confirmation prompt
+# @stdout information regarding the process of setting the 'reset' flag and zeza status
+# @stderr various error messages depending on the error
+#
+# @see [.zeza::status](#zezastatus)
+# @see [eza_colors man page](https://github.com/eza-community/eza/blob/main/man/eza_colors.5.md)
+#<<
+function .zeza::reset() {
+
+    # source the common function header
+    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
+
+    printf "\n"
+
+    local help=$(
+        printf "%b %b%bzeza reset%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t    %bprepends the 'reset' flag to the EZA_COLORS environment variable\n" "$wht"
+        printf "\n"
+        printf "\t    %bnote: this disables eza's color assignments for standard file extensions.\n"
+        printf "\n"
+        printf "\t%busage%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza reset [%boption%b]\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%boptions%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %b-h, --help%b    display this help and exit\n" "$itl" "$ritl"
+        printf "\t    %b-u, --unset%b   remove the reset flag from EZA_COLORS\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bexample%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza reset\n" "$rst"
+        printf "\n"
+        printf "\t%bsee%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    eza_colors(5) for more information\n" "$rst"
+    )
+
+    # display help and exit
+    if [[ "$1" =~ ^(-h|--help)$ ]] ; then
+        print $help
+        printf "\n"
+        return 0
+    fi
+
+    # sweet and simple for unset
+    if [[ "$1" =~ ^(-u|--unset)$ ]] ; then
+
+        if [[ -f "$ZEZA[RESET_CACHE]" ]] ; then
+
+            # delete the reset mode cache file
+            printf "%b %bRemoving the 'reset' flag...%b" "$tag" "$wht" "$rst"
+            rm -f "$ZEZA[RESET_CACHE]"
+            printf "%bDONE%b\n" "$grn" "$rst"
+
+            # make sure all settings are current
+            .zeza-load-settings || return $?
+            .zeza-load-ezacolors || return $?
+
+            # just run update with no arg to unset
+            .zeza-update-eza
+
+            # show status
+            .zeza::status
+
+            return 0
+        else
+            printf "%b %bThe reset flag is not set!%b" "$tag" "$ylw" "$rst"
+            printf "$cancelled"
+            printf "\n"
+            return 0
+        fi
+    fi
+
+    # no sense continuing if rest flag is already set
+    if [[ -f "$ZEZA[RESET_CACHE]" ]] ; then
+        printf "%b %bThe reset flag is already set in EZA_COLORS!%b\n" "$tag" "$ylw" "$rst"
+        printf "%b %bRun '%b%becho \$EZA_COLORS%b%b' to verify.%b\n" \
+            "$tag" "$wht" "$itl" "$magb" "$ritl" "$wht" "$rst"
+        printf "\n"
+        return 69
+    fi
+
+    local response
+
+    # fair warning
+    printf "%b %bWarning: %bThis will disable eza's color output for various file extensions.%b\n" \
+        "$tag" "$ylw" "$wht" "$rst"
+    printf "%b %bWould you like to proceed" "$tag" "$wht"
+    read -q "response? (y/N)?"
+    if [[ $response:l = "y" ]] ; then
+
+        printf "\n"
+
+        # only do this if NOT in default or no color modes
+        if [[ ! -f "$ZEZA[DEFAULT_CACHE]" && ! -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
+
+            # make sure all settings are current
+            .zeza-load-settings || return $?
+            .zeza-load-ezacolors || return $?
+
+            # update EZA_COLORS with the reset flag
+            .zeza-update-eza reset
+
+            # enable reset flag mode
+            .zeza-enable-mode reset
+        else
+            printf "%b %bReset is only available for custom configurations!%b\n" \
+                "$tag" "$red" "$rst" 1>&2
+            printf "%b %bRun '%b%bzeza configure%b%b' to create a custom configuration.%b\n" \
+                "$tag" "$wht" "$magb" "$itl" "$ritl" "$wht" "$rst" 1>&2
+            printf "\n"
+            .zeza::configure --help
+            return 64
+        fi
+    else
+        printf "$cancelled"
+    fi
+
+    # show status
+    .zeza::status
+
+    return 0
+}
+
+#>>
+# @description
+#   restore - restores a previous eza color configuration from a source file
+#
+#   If no source file is provided, restore will default to using a cached backup
+#
+#   usage: `zeza restore DESTINATION [SOURCE=cached backup]`
+#
+# @example
+#   zeza restore /home/user /home/user/backup/.zeza_config.eza
+#
+# @arg $1 path DESTINATION - the full path to where the configuration will be restored
+# @arg $2 path SOURCE - the full path to a configuration file (defaults to cached backup)
+#
+# @exitcode 0 if successful
+# @exitcode 64 if DESTINATION is not provided
+# @exitcode 66 if SOURCE is not readable or cached backup is missing
+# @exitcode 73 if DESTINATION cannot be created
+# @exitcode 77 if ESTINATION is not writable
+#
+# @stdin user responses to various prompts
+# @stdout information regarding the configuration process
+# @stderr various error messages depending on where in the function the error occurred
+#<<
+function .zeza::restore() {
+
+    # source the common function header
+    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
+
+    printf "\n"
+
+    local help=$(
+        printf "%b %b%bzeza restore%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t    %brestore a previous eza color configuration from a cached backup (default) or\n" "$wht"
+        printf "\t    a user provided file, to a given destination directory\n"
+        printf "\n"
+        printf "\t%busage%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza restore [%boption%b] | <%bdest%b> [%bsource%b]\n" \
+            "$itl" "$ritl" "$itl" "$ritl" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%boptions%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %b-h, --help%b    display this help and exit\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bargs%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %bdest%b          the full path to where the config will be restored\n" "$itl" "$ritl"
+        printf "\t    %bsource%b        optional, the full path to a configuration file\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bexample%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza restore /home/user\n"
+        printf "\t    zeza restore /home/user /my/backup/config/.zeza_custom.eza%b" "$rst"
+    )
+
+    # display help and exit
+    if [[ "$1" =~ ^(-h|--help)$ ]] ; then
+        print $help
+        printf "\n"
+        return 0
+    fi
+
+    local src dest response
+
+    # validate arguments
+    case $# in
+        2)
+            # make sure source is readable
+            src="${2:P}"
+            if [[ ! -r "$src" ]] ; then
+                .zeza-file-system-error read "$src" "file is not readable or does not exist"
+                return 66
+            fi
+            ;&
+        1)
+            # if src isn't already set
+            if [[ -z $src ]] ; then
+                # make sure there is a backup file in the cache dir
+                if [[ -f $ZEZA[USER_CONFIG_BU] ]] ; then
+                    src="$ZEZA[USER_CONFIG_BU]"
+                else
+                    .zeza-file-system-error read "$ZEZA[USER_CONFIG_BU]" "there is no cached backup file"
+                    print $help
+                    printf "\n"
+                    return 66
+                fi
+            fi
+            # make sure destination is a directory
+            dest="${1:P}"
+            if [[ ! -d "$dest" ]] ; then
+                printf "%b %b%s%b does not exist, would you like to create it" "$tag" "$cyn" "$dest" "$wht"
+                read -q "response? (y/N)?"
+                if [[ $response = "y" ]] ; then
+                    printf "\n"
+                    printf "%b %bCreating directory..." "$tag" "$wht"
+                    .zeza-run-command /usr/bin/mkdir -p "$dest"
+                    if [[ $? -ne 0 ]] ; then
+                        .zeza-file-system-error write "$dest" "$ZEZA[CMD_ERR]"
+                        return 73
+                    fi
+                    printf "%bDONE%b\n" "$grn" "$rst"
+                else
+                    printf "$cancelled"
+                    printf "\n"
+                    return 0
+                fi
+            fi
+
+            # make sure detination is writable
+            if [[ -w "$dest" ]] ; then
+                # add config filename to destination
+                dest+="/$ZEZA[CFG_FILENAME]"
+            else
+                .zeza-file-system-error write "$dest" "directory is not writable or permission denied"
+                return 77
+            fi
+            ;;
+        *)
+            printf "%b %bMissing operands.%b\n" "$tag" "$red" "$rst"
+            printf "\n"
+            print $help
+            printf "\n"
+            return 64
+            ;;
+    esac
+
+    # confirm before restoring
+    printf "%b %bRestoration source: %b%s%b\n" "$tag" "$wht" "$cyn" "$src" "$rst"
+    printf "%b %bRestoration destination: %b%s%b\n" "$tag" "$wht" "$cyn" "$dest" "$rst"
+    printf "%b %bAre you sure you want to restore this configuration" "$tag" "$wht"
+    read -q "response? (y/N)?"
+    if [[ $response = "y" ]] ; then
+
+        printf "\n"
+
+        # if user wants to restore cached backup file
+        if [[ $# -eq 1 ]]; then
+            .zeza-cache-backup restore "$dest"
+        # if using a custom backup file
+        elif [[ $# -eq 2 ]] ; then
+
+            # restore the backup file
+            .zeza-run-command /usr/bin/mv -i "$src" "$dest"
+            if [[ $? -ne 0 ]] ; then
+                .zeza-file-system-error write "$dest" "$ZEZA[CMD_ERR]"
+                return 1
+            fi
+        fi
+
+        # update the cache and environment variables
+        printf "%b %bUpdating cache and environment..." "$tag" "$wht"
+        print "$dest" > $ZEZA[USER_CONFIG_CACHE]
+        ZEZA[CURRENT_SETTINGS]="$dest"
+        printf "%bDONE%b\n" "$grn" "$rst"
+
+        # make sure default and no color modes are disabled
+        .zeza-delete-cache-file default eza_colors nocolor
+
+        # update all the settings based on the restored config
+        .zeza-load-settings || return $?
+        .zeza-load-ezacolors || return $?
+
+        # set EZA_COLORS using config
+        .zeza-update-eza
+        printf "\n"
+    else
+        printf "$cancelled"
+    fi
+
+    # show updated status
+    .zeza::status
+
+    return 0
+}
+
+#>>
+# @description
+#   status - show the current status of the zeza plugin environment
+#
+#   usage: `zeza status [OPTION]`
+#
+# @example
+#   zeza status
+#
+# @option -h | --help display help text and exit
+#
+# @noargs
+#
+# @exitcode 0 if successful
+# @exitcode 1 on error
+#
+# @stdout prints the following information:
+#   * eza program version
+#   * set/unset status of the EZA_COLORS environment variable
+#   * current color mode
+#   * reset status
+#   * current configuration file path
+#   * cached backup status
+#
+# @see [.zeza::configure](#zezaconfigure)
+# @see [.zeza::default](#zezadefault)
+# @see [.zeza::demo](#zezademo)
+# @see [.zeza::nocolor](#zezanocolor)
+#<<
+function .zeza::status() {
+
+    # source the common function header
+    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
+
+    printf "\n"
+
+    local help=$(
+        printf "%b %b%bzeza status%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t    %bshow the current status of the zeza plugin environment\n" "$wht"
+        printf "\n"
+        printf "\t%busage%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza status [%boption%b]\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%boptions%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %b-h, --help%b    display this help and exit\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bexample%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza status\n" "$rst"
+    )
+
+    # display help and exit
+    if [[ "$1" =~ ^(-h|--help)$ ]] ; then
+        print $help
+        printf "\n"
+        return 0
+    fi
+
+    printf "%b %b%bCurrent EZA Environment%b\n" "$tag" "$(z256 f 246)" "$und" "$rst"
+    printf "\n"
+
+    # print version
+    printf "\t%bEZA Version    : %b%s%b\n" "$wht" "$blub" \
+        "$(eza --version | grep '^v')" "$rst"
+
+    # print EZA_COLORS status
+    printf "\t%bEZA_COLORS Set : " "$wht"
+    if [[ -n "$EZA_COLORS" ]] ; then
+        printf "%bTrue%b\n" "$grn" "$rst"
+    else
+        printf "%bFalse%b\n" "$red" "$rst"
+    fi
+
+    # print color mode and config file info
+    local mode cfg_file
+    if [[ -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
+
+        mode="${redb}No Color${rst}"
+        cfg_file="None"
+
+    elif [[ -f "$ZEZA[DEFAULT_CACHE]" ]]; then
+        mode="${ylwb}Eza Defaults${rst}"
+        cfg_file="None"
+    else
+        mode="${grnb}User Custom${rst}"
+        cfg_file="$ZEZA[CURRENT_SETTINGS]"
+    fi
+    printf "\t%bColor Mode     : %b\n" "$wht" "$mode"
+    printf "\t%bConfig File    : %b%s%b\n" "$wht" "$cyn" "$cfg_file" "$rst"
+    unset mode cfg_file
+
+    # print reset status
+    printf "\t%bReset Flag Set : " "$wht"
+    if [[ -f "$ZEZA[RESET_CACHE]" ]] ; then
+        printf "%bTrue%b\n" "$grn" "$rst"
+    else
+        printf "%bFalse%b\n" "$red" "$rst"
+    fi
+
+    # print backup file status
+    printf "\t%bBackup Cached  : " "$wht"
+    if [[ -f "$ZEZA[USER_CONFIG_BU]" ]] ; then
+        printf "%bTrue%b\n" "$grn" "$rst"
+    else
+        printf "%bFalse%b\n" "$red" "$rst"
+    fi
+
+    if [[ -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
+        printf "\n"
+        printf "\t%b%bTo exit 'no color' mode%b\n" "$(z256 f 246)" "$und" "$rst"
+        printf "\n"
+        printf "\t    %b*%b run '%b%bzeza_restore%b%b' to restore your previous configuration.%b\n" \
+            "$ylwb" "$wht" "$magb" "$itl" "$ritl" "$wht" "$rst"
+        printf "\t    %b*%b run '%b%bzeza_default%b%b' to revert to eza's default configuration.%b\n" \
+            "$ylwb" "$wht" "$magb" "$itl" "$ritl" "$wht" "$rst"
+        printf "\t    %b*%b run '%b%bzeza_config [dir]%b%b' to start a new custom configuration.%b\n" \
+            "$ylwb" "$wht" "$magb" "$itl" "$ritl" "$wht" "$rst"
+    fi
+    printf "\n"
+
+    return 0
+}
+
+#>>
+# @description
+#   tables - display one or more color tables representing the color capabilities
+#            of the user's terminal emulator
+#
+#   usage: `zeza tables [OPTION]`
+#
+# @example
+#   zeza tables
+#   zeza tables --bn
+#   zeza tables --all
+#   zeza tables --test
+#
+# @option -h | --help   display help text and exit
+# @option -n display the normal on normal color table (default)
+# @option -b display the bright on bright color table
+# @option --nb display the normal on bright color table
+# @option --bn display the bright on normal color table
+# @option --256 display the 256 color table
+# @option -a | --all display all table variations
+# @option -t | --test test if bold text is displayed using bright colors
+#
+# @noargs
+#
+# @exitcode 0 if successful
+# @exitcode 64 if an invalid option is provided
+#
+# @stdout displays the following:
+#   * one or more color tables depending on the option provided
+#   * a bold/bright color terminal emulator test and information
+#<<
+function .zeza::tables() {
+
+    # source the common function header
+    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
+
+    printf "\n"
+
+    local help=$(
+        printf "%b %b%bzeza tables%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t    %bdisplay one or more color tables representing the color capabilities of\n" "$wht"
+        printf "\t    the user's terminal emulator\n"
+        printf "\n"
+        printf "\t    Some (most?) terminal emulators use the bold option to also enable bright\n"
+        printf "\t    colors. If the bold foreground text colors (1;##m) appear bold and/or\n"
+        printf "\t    bright in the table(s) shown, this is the likely reason. You may be able\n"
+        printf "\t    to disable/modify such behavior in your terminal emulator's settings if\n"
+        printf "\t    you wish to.\n"
+        printf "\n"
+        printf "\t    You can run '%bzeza tables --test%b' to see if your emulator functions this way.\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%busage%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza tables [%boption%b]\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%boptions%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    %b-n%b            display the normal on normal color table (default)\n" "$itl" "$ritl"
+        printf "\t    %b-b%b            display the bright on bright color table\n" "$itl" "$ritl"
+        printf "\t    %b--nb%b          display the normal on bright color table\n" "$itl" "$ritl"
+        printf "\t    %b--bn%b          display the bright on normal color table\n" "$itl" "$ritl"
+        printf "\t    %b--256%b         display the 256 color table\n" "$itl" "$ritl"
+        printf "\t    %b-a, --all%b     display all table variations\n" "$itl" "$ritl"
+        printf "\t    %b-h, --help%b    display this help and exit\n" "$itl" "$ritl"
+        printf "\t    %b-t, --test%b    test if bold text is displayed using bright colors\n" "$itl" "$ritl"
+        printf "\n"
+        printf "\t%bexample%b\n" "$cyn" "$wht"
+        printf "\n"
+        printf "\t    zeza tables\n"
+        printf "\t    zeza tables --256\n"
+        printf "\t    zeza tables --all%b\n" "$rst"
+    )
+
+    # display help and exit
+    if [[ "$1" =~ ^(-h|--help)$ ]] ; then
+        print $help
+        printf "\n"
+        return 0
+    fi
+
+    # display test text for bold/bright
+    if [[ "$1" =~ ^(-t|--test)$ ]] ; then
+        printf "%b %b%bbold/bright color test%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t%bThis is a simple test to determine if your terminal emulator\n" "$wht"
+        printf "\tdisplays 'bold' text using a heavier font weight and/or 'bright'\n"
+        printf "\tcolors.\n"
+        printf "\n"
+        printf "\tIf everything is normal, the following 4 lines should all appear\n"
+        printf "\tdifferent from one another in the following ways:\n"
+        printf "\n"
+        printf "\t    - the colors of lines 1 and 2 should match, but line 2\n"
+        printf "\t      should appear thicker in weight than line 1\n"
+        printf "\t    - the colors of lines 3 and 4 should match, but line 4\n"
+        printf "\t      should appear thicker in weight than line 3\n"
+        printf "\t    - the colors of lines 3 and 4 should be brighter, or\n"
+        printf "\t      different (see note), than the colors of lines 1 and 2\n"
+        printf "\n"
+        printf "\t%bNote%b: if your terminal color scheme uses completely different\n" "$bld" "$rbld"
+        printf "\tcolors for the 'bright' variations, you should see those colors\n"
+        printf "\tin the bright text lines (e.g. green and a shade of purple rather\n"
+        printf "\tthan green and a brighter shade of green).\n"
+        printf "\n"
+        printf "\t%b1) %bTHIS %bIS %bONLY %bNORMAL %bTEXT %b(ANSI CODES: '\\\e[3#m'   where 3#=normal color)\n" \
+            "$wht" "$mag" "$red" "$blu" "$ylw" "$grn" "$wht"
+        printf "\t2) %b%bTHIS %bIS %bBOLD %bNORMAL %bTEXT%b %b(ANSI CODES: '\\\e[1;3#m' where 1;3#=bold, normal color)%b\n" \
+            "$bld" "$mag" "$red" "$blu" "$ylw" "$grn" "$rbld" "$wht"
+        printf "\t3) %bTHIS %bIS %bONLY %bBRIGHT %bTEXT %b(ANSI CODES: '\\\e[9#m'   where 9#=bright color)%b\n" \
+            "$magb" "$redb" "$blub" "$ylwb" "$grnb" "$wht"
+        printf "\t4) %b%bTHIS %bIS %bBOLD %bBRIGHT %bTEXT%b %b(ANSI CODES: '\\\e[1;9#m' where 1;9#=bold, bright color)%b\n" \
+            "$bld" "$magb" "$redb" "$blub" "$ylwb" "$grnb" "$rbld" "$wht" "$rst"
+        printf "\n"
+        printf "\t%bIf lines 2, 3 and 4 are the same color, your terminal emulator\n" "$wht"
+        printf "\tis rendering bold text using bright colors. There may be a\n"
+        printf "\tsetting or command flag available to change this behavior if you\n"
+        printf "\twish to do so.\n"
+        printf "\n"
+        printf "\tFor example, Windows Terminal has a setting for 'Intense text style'\n"
+        printf "\tthat can be set to 'bold', 'bright', or 'bold AND bright'. Setting\n"
+        printf "\tit to 'bold' results in the expected rendering behavior and the\n"
+        printf "\tfour lines above appear as described. Similarly, Xterm, can be made\n"
+        printf "\tto properly render bold variations by placing 'XTerm*boldColors: false'\n"
+        printf "\tin your .Xdefaults file. This setting may also work for other emulators,\n"
+        printf "\tsuch as rxvt-unicode, that use the 'boldColors' setting.\n"
+        printf "\n"
+        return 0
+    fi
+
+    # sample text
+    local text="gYw"
+
+    # table label strings
+    local -A labels
+    labels[nrm_f]="$bld${wht}Normal Foreground$rst"
+    labels[nrm_b]="$bld${wht}Normal Background$rst"
+    labels[brt_f]="$bld${whtb}Bright Foreground$rst"
+    labels[brt_b]="$bld${whtb}Bright Background$rst"
+
+    # foreground and background color codes
+    local -a nrm_fore=( "   0m" "   1m" "  30m" "1;30m" "  31m" "1;31m" "  32m" "1;32m" "  33m" "1;33m" "  34m" "1;34m" "  35m" "1;35m" "  36m" "1;36m" "  37m" "1;37m" )
+    local -a nrm_back=( "40m" "41m" "42m" "43m" "44m" "45m" "46m" "47m" )
+    local -a brt_fore=( "   0m" "   1m" "  90m" "1;90m" "  91m" "1;91m" "  92m" "1;92m" "  93m" "1;93m" "  94m" "1;94m" "  95m" "1;95m" "  96m" "1;96m" "  97m" "1;97m" )
+    local -a brt_back=( "100m" "101m" "102m" "103m" "104m" "105m" "106m" "107m" )
+
+    # background column headers
+    local -A headers
+    headers[nrm_h]="${wht}FG on >| No BG    ${nrm_back[1]}     ${nrm_back[2]}     ${nrm_back[3]}     ${nrm_back[4]}     ${nrm_back[5]}     ${nrm_back[6]}     ${nrm_back[7]}     ${nrm_back[8]}    |$rst"
+    headers[brt_h]="${wht}FG on >| No BG    ${brt_back[1]}    ${brt_back[2]}    ${brt_back[3]}    ${brt_back[4]}    ${brt_back[5]}    ${brt_back[6]}    ${brt_back[7]}    ${brt_back[8]}   |$rst"
+
+    # colorful label divider
+    local div="$ylwb$bld/$rst"
+
+    # holds the information to be printed in each table
+    local label header fore back fg
+
+    # was an invalid option provided?
+    local invalid=true
+
+    # assign table values based on desired format and call print function
+    # ';|' allows fallthrough to subsequent cases
+    case "$1" in
+        "-a"|"--all")
+            # just fall through
+            invalid=false
+            ;|
+        "--256"|"-a"|"--all") # 256 color table
+            printf "%b %b%b256 Color Palette%b\n" "$tag" "$bld" "$whtb" "$rst"
+            .zeza-256-colors
+            invalid=false
+            ;|
+        "-b"|"-a"|"--all") # bright/bright
+            label="$tag $labels[brt_f] $div $labels[brt_b]\n"
+            header="$headers[brt_h]"
+            fore=( "${(@)brt_fore}" )
+            back=( "${(@)brt_back}" )
+            .zeza-ansi-colors $label $header fore back
+            invalid=false
+            ;|
+        "--bn"|"-a"|"--all") #bright/normal
+            label="$tag $labels[brt_f] $div $labels[nrm_b]\n"
+            header="$headers[brt_h]"
+            fore=( "${(@)brt_fore}" )
+            back=( "${(@)nrm_back}" )
+            .zeza-ansi-colors $label $header fore back
+            invalid=false
+            ;|
+        "--nb"|"-a"|"--all") # normal/bright
+            label="$tag $labels[nrm_f] $div $labels[brt_b]\n"
+            header="$headers[brt_h]"
+            fore=( "${(@)nrm_fore}" )
+            back=( "${(@)brt_back}" )
+            .zeza-ansi-colors $label $header fore back
+            invalid=false
+            ;|
+        "-n"|""|"-a"|"--all") # normal/normal; also shown when no option provided
+            label="$tag $labels[nrm_f] $div $labels[nrm_b]\n"
+            header="$headers[nrm_h]"
+            fore=( "${(@)nrm_fore}" )
+            back=( "${(@)nrm_back}" )
+            .zeza-ansi-colors $label $header fore back
+            invalid=false
+            ;;
+    esac
+
+    # this is needed because the ';|' fallthrough terminator in the case statement
+    # above will cause a default '*)' case to always be called if any option other
+    # than '-a' or '-n' is provided.
+    if [[ $invalid = true ]] ; then
+        printf "%b %binvalid option: '$1'%b\n" "$tag" "$red" "$rst" 1>&2
+        printf "\n"
+        print "$help"
+        return 64
+    fi
+}
+
+#-------------------------------------------------------------------------------
+# COMPLETIONS
+#-------------------------------------------------------------------------------
+
+# completions function based on info and examples found here:
+# https://github.com/zsh-users/zsh-completions/blob/master/zsh-completions-howto.org
+# https://zsh.sourceforge.io/Doc/Release/Completion-System.html#Completion-System
+# @internal
+function _zeza {
+
+    # make local copy of curcontext due to use of '-C' option for _arguments
+	local curcontext="$curcontext"
+	local state line
+	typeset -A opt_args
+
+    # designate state for command and options
+	_arguments -C \
+		':command:->command' \
+		'*::options:->options'
+
+    # handle each state
+	case $state in
+		command)
+            # subcommands to zeza
+			local -a subcommands
+			subcommands=(
+                'configure:Generate a customizable configuration file'
+                'default:Setup eza to use the default, builtin color configuration'
+                'demo:Print color codes and their descriptions in their assigned colors'
+                'nocolor:Setup eza to display completely colorless output'
+                'refresh:Refresh zeza to reflect changes made to a configuration'
+                'reset:Prepend the 'reset' flag to the EZA_COLORS environment variable'
+                'restore:Restore a previous custom configuration file'
+                'status:Show the current status of the zeza plugin environment'
+                'tables:Show formatted color tables using the terminal color scheme'
+			)
+			_describe -t commands 'zeza' subcommands
+
+            # the help argument
+            _arguments \
+                '(-h --help)'{-h,--help}'[display usage information]'
+		    ;;
+
+		options)
+            # subcommand options and their arguments
+			case $line[1] in
+                configure)
+					_arguments \
+                        '(-h --help)'{-h,--help}'[display usage information]' \
+                        '1:dest:_files -/'
+                    ;;
+                default)
+					_arguments \
+                        '(-h --help)'{-h,--help}'[display usage information]'
+                    ;;
+                demo)
+					_arguments \
+                        '(-h --help)'{-h,--help}'[display usage information]'
+                    ;;
+                nocolor)
+					_arguments \
+                        '(-h --help)'{-h,--help}'[display usage information]'
+                    ;;
+                refresh)
+					_arguments \
+                        '(-d --demo)'{-d,--demo}'[display demo output after refresh]' \
+                        '(-h --help)'{-h,--help}'[display usage information]'
+                    ;;
+                reset)
+					_arguments \
+                        '(-u --unset)'{-u,--unset}'[remove the reset flag from EZA_COLORS]' \
+                        '(-h --help)'{-h,--help}'[display usage information]'
+                    ;;
+                restore)
+					_arguments \
+                        '(-h --help)'{-h,--help}'[display usage information]' \
+                        '1:dest:_files -/' \
+                        '*:file:_files'
+                    ;;
+                status)
+					_arguments \
+                        '(-h --help)'{-h,--help}'[display usage information]'
+                    ;;
+                tables)
+                    _arguments \
+                        '(-h --help)'{-h,--help}'[display usage information]' \
+                        '-n[display the normal on normal color table (default)]' \
+                        '-b[display the bright on bright color table]' \
+                        '--nb[display the normal on bright color table]' \
+                        '--bn[display the bright on normal color table]' \
+                        '--256[display the 256 color table]' \
+                        '(-a --all)'{-a,--all}'[display all table variations]' \
+                        '(-t --test)'{-t,--test}'[test if bold text is displayed using bright colors]'
+                    ;;
+
+			esac
+		    ;;
+	esac
+
+    return 0
+}
+
+# If run from a script, do not set the completion function
+if (( ${+functions[compdef]} )); then
+    compdef _zeza zeza
+fi

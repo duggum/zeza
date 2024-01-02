@@ -1,0 +1,198 @@
+# one entry per line in the form: code=description
+# comments are preceded by a '#'
+# '#>>' and '#<<' denote a folding region in VS Code
+# see: https://github.com/eza-community/eza/blob/main/man/eza_colors.5.md
+
+#>> COLOR CHEAT SHEET
+#------------------------------------------------------------------------------#
+#               NORMAL    NORMAL    BRIGHT    BRIGHT                           #
+#   COLOR         FG        BG        FG        BG       EFFECTS               #
+#------------------------------------------------------------------------------#
+#   Black         30        40        90        100      00 Reset              #
+#   Red           31        41        91        101      01 Bold               #
+#   Green         32        42        92        102      02 Dim/Faint          #
+#   Yellow        33        43        93        103      03 Italic             #
+#   Blue          34        44        94        104      04 Underline          #
+#   Magenta       35        45        95        105      05 Blink              #
+#   Cyan          36        46        96        106      07 Inverse            #
+#   White         37        47        97        107      21 Double Underline   #
+#                                                                              #
+#   256 Colors                                                                 #
+#------------------------------------------------------------------------------#
+#   Foreground: 38;5;nnn    (nnn = three digit color number)                   #
+#   Background: 48;5;nnn                                                       #
+#                                                                              #
+#   RGB Colors                                                                 #
+#------------------------------------------------------------------------------#
+#   Foreground: 38;2;r;g;b    (r/g/b = component numbers in the range 0-255)   #
+#   Background: 48;2;r;g;b                                                     #
+#                                                                              #
+#   Notes                                                                      #
+#------------------------------------------------------------------------------#
+#   : Some (most?) terminal emulators use the bold effect (01) to also enable  #
+#     bright ('intense') colors. For example, 01;3#m is the same as 01;9#m.    #
+#     This is especially notable as bold black (01;30m) will be rendered as    #
+#     bold, bright black (a.k.a. dark gray). This functionality reduces your   #
+#     overall color options as you will not be able to show bold normal text.  #
+#     That said, you may be able to disable/modify such behavior in your       #
+#     terminal emulator settings. Note, however, if you do color scheme uses   #
+#     the same color for black AND the background, any bold black text will    #
+#     still be rendered the same color as normal black text, and it will       #
+#     therefore be invisible.                                                  #
+#                                                                              #
+#   : An alternative to the bold black problem above is to use a gray from     #
+#     the 256 color scale (38;5;244), or you can use dim white (02;37)         #
+#                                                                              #
+#   : Bright black is dark gray, and bright white is bright gray               #
+#                                                                              #
+#   : Dim bright (02;9#) != normal (3#)                                        #
+#     e.g. 31, 02;31, 91 and 02;91 all yield different colors                  #
+#                                                                              #
+#   : Some effect codes may not work on all terminal emulators                 #
+#                                                                              #
+#   See Also:                                                                  #
+#------------------------------------------------------------------------------#
+#     man console_codes                                                        #
+#     https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit           #
+#------------------------------------------------------------------------------#
+#<<
+
+#>> LS CODES USED BY EZA
+# -------------------------------------------------------------------
+fi="00"                  # normal file
+di="01;34"               # directory
+ln="36"                  # symbolic link
+pi="33"                  # named pipe (fifo)
+bd="01;33"               # block device
+cd="01;33"               # character device
+so="01;31"               # socket
+ex="01;32"               # executable
+or="31"                  # orphan symlink
+#<<
+
+#>> PERMISSIONS
+# ---------------------------------------------------------
+oc="35"                  # octal permissions
+ur="01;33"               # user +r bit
+uw="01;31"               # user +w bit
+ux="01;04;32"            # user +x bit (files)
+ue="01;32"               # user +x bit (other types)
+gr="33"                  # group +r bit
+gw="31"                  # group +w bit
+gx="32"                  # group +x bit
+tr="33"                  # others +r bit
+tw="31"                  # others +w bit
+tx="32"                  # others +x bit
+su="35"                  # higher bits (user files)
+sf="35"                  # higher bits (other types)
+xa="00"                  # extended attribute marker
+#<<
+
+#>> FILE SIZES
+# ---------------------------------------------------------
+sn="01;32"               # size numbers
+sb="32"                  # size unit
+df="01;32"               # major device id
+ds="32"                  # minor device id
+#<<
+
+#>> SIZE NUMBER AND UNIT SUB-SETTINGS
+# ---------------------------------------------------------
+nb="01;32"               # size number < 1 KB/Kib
+nk="01;32"               # size number 1 KB/KiB to 1 MB/MiB
+nm="01;32"               # size number 1 MB/MiB to 1 GB/GiB
+ng="01;32"               # size number 1 GB/GiB to 1 TB/TiB
+nt="01;32"               # size number >= 1 TB/TiB
+ub="32"                  # size unit < 1 KB/Kib
+uk="32"                  # size unit 1 KB/KiB to 1 MB/MiB
+um="32"                  # size unit 1 MB/MiB to 1 GB/GiB
+ug="32"                  # size unit 1 GB/GiB to 1 TB/TiB
+ut="32"                  # size unit >= 1 TB/TiB
+#<<
+
+#>> OWNERS AND GROUPS
+# ---------------------------------------------------------
+uu="01;33"               # user you
+uR="00"                  # user root
+un="00"                  # user other
+gu="01;33"               # group you
+gR="00"                  # group root
+gn="00"                  # group other
+#<<
+
+#>> HARD LINKS
+# ---------------------------------------------------------
+lc="01;31"               # number of hard links
+lm="31;43"               # multi-link file
+#<<
+
+#>> GIT
+# ---------------------------------------------------------
+ga="32"                  # new
+gm="34"                  # modified
+gd="31"                  # deleted
+gv="33"                  # renamed
+gt="35"                  # typechange
+gi="02;00"               # ignored
+gc="31"                  # conflicted
+#<<
+
+#>> GITREPO
+# ---------------------------------------------------------
+Gm="32"                  # branch_main
+Go="33"                  # branch_other
+Gc="32"                  # git_clean
+Gd="01;33"               # git_dirty
+#<<
+
+#>> DETAILS AND METADATA
+# ---------------------------------------------------------
+xx="01;90"               # punctuation
+da="34"                  # timestamp
+in="35"                  # file inode
+bl="36"                  # number of blocks
+hd="04;00"               # table header row
+ff="00"                  # BSD file flags
+lp="36"                  # symlink path
+cc="31"                  # control character
+#<<
+
+#>> OVERLAYS
+# ---------------------------------------------------------
+bO="04;00"               # Broken link path
+#<<
+
+#>> OTHER
+# ---------------------------------------------------------
+sp="33"                  # special
+mp="01;04;34"            # mount point
+#<<
+
+#>> FILETYPES (THESE DO NOT WORK IF THE 'RESET' FLAG IS SET!)
+# ---------------------------------------------------------
+im="35"                  # image
+vi="01;35"               # video
+mu="36"                  # lossy music
+lo="01;36"               # lossless music
+cr="01;32"               # cryptography (ex: key or certificate)
+do="32"                  # document (ex: office suite document or PDF)
+co="31"                  # compressed
+tm="37"                  # temporary (ex: a text editor’s backup file)
+cm="33"                  # compilation artifact (ex: Java class file)
+bu="01;04;33"            # project build (ex: Makefile)
+sc="01;33"               # source code
+#<<
+
+#>> SECURITY CONTEXT
+# ---------------------------------------------------------
+Sn="00"                  # none
+Su="34"                  # selinux user
+Sr="32"                  # selinux role
+St="33"                  # selinux typ
+Sl="36"                  # selinux range
+#<<
+
+#>> CUSTOM EXTENSION SETTINGS
+# ---------------------------------------------------------
+# EXAMPLE: *.mp4="38;5;197"
+#<<

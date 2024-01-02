@@ -1,0 +1,254 @@
+#>>
+#   Copyright (c) 2023 David Jopson
+#
+#   zeza_colors.leza - a general purpose color library for the zeza zsh plugin
+#
+#   All variables are declared as local to minimize global scope pollution.
+#   This file must be sourced in each file or function you wish to use it in,
+#   like so:
+#
+#       'builtin source "path/to/eza_colors.leza"'
+#
+#   Note the following rules for applying colors and effects:
+#
+#       1. colors of the same mode (fg or bg) will overwrite each other without
+#          the need to reset beforehand
+#       2. colors of opposite modes will NOT overwrite each other; they stack
+#       3. effects will NOT overwrite each other; they stack
+#       4. effect resets only change the targeted effect
+#       5. color resets only change the targeted mode (fg/bg)
+#       6. the master reset ($rst) removes all colors and effects
+#       7. 256 and rgb colors are applied using command substitution to call
+#          their respective functions: $(256 f 122) or $(rgb f 134 12 47)
+#
+#   Usage Examples:
+#
+#       "${red}${und}underlined red text and ${blu}underlined blue text${rst}"
+#       "${dim}dim normal text ${blu}${itl}and dim italic blue text${rst}"
+#       "${ylw}yellow text and ${blu}${ylwnb}blue text on a yellow bg${rst}"
+#       "$(256 f 244)${und}gray underlined text and${rund} now just gray${rst}"
+#       "${grn}${ylwbb}green on bright yellow${rbg} and now just green${rst}"
+#       "${blu}${bld}${und}${itl}blue, bold, underlined, italic${rst}"
+#<<
+
+#>> COLOR CHEAT SHEET
+#------------------------------------------------------------------------------#
+#               NORMAL    NORMAL    BRIGHT    BRIGHT                           #
+#   COLOR         FG        BG        FG        BG       EFFECTS               #
+#------------------------------------------------------------------------------#
+#   Black         30        40        90        100      00 Reset              #
+#   Red           31        41        91        101      01 Bold               #
+#   Green         32        42        92        102      02 Dim/Faint          #
+#   Yellow        33        43        93        103      03 Italic             #
+#   Blue          34        44        94        104      04 Underline          #
+#   Magenta       35        45        95        105      05 Blink              #
+#   Cyan          36        46        96        106      07 Inverse            #
+#   White         37        47        97        107      21 Double Underline   #
+#                                                                              #
+#   256 Colors                                                                 #
+#------------------------------------------------------------------------------#
+#   Foreground: 38;5;nnn    (nnn = three digit color number)                   #
+#   Background: 48;5;nnn                                                       #
+#                                                                              #
+#   RGB Colors                                                                 #
+#------------------------------------------------------------------------------#
+#   Foreground: 38;2;r;g;b    (r/g/b = component numbers in the range 0-255)   #
+#   Background: 48;2;r;g;b                                                     #
+#                                                                              #
+#   Notes                                                                      #
+#------------------------------------------------------------------------------#
+#   : Some (most?) terminal emulators use the bold effect (01) to also enable  #
+#     bright ('intense') colors. For example, 01;3#m is the same as 01;9#m.    #
+#     This is especially notable as bold black (01;30m) will be rendered as    #
+#     bold, bright black (a.k.a. dark gray). This functionality reduces your   #
+#     overall color options as you will not be able to show bold normal text.  #
+#     That said, you may be able to disable/modify such behavior in your       #
+#     terminal emulator settings. Note, however, if you do color scheme uses   #
+#     the same color for black AND the background, any bold black text will    #
+#     still be rendered the same color as normal black text, and it will       #
+#     therefore be invisible.                                                  #
+#                                                                              #
+#   : An alternative to the bold black problem above is to use a gray from     #
+#     the 256 color scale (38;5;244), or you can use dim white (02;37)         #
+#                                                                              #
+#   : Bright black is dark gray, and bright white is bright gray               #
+#                                                                              #
+#   : Dim bright (02;9#) != normal (3#)                                        #
+#     e.g. 31, 02;31, 91 and 02;91 all yield different colors                  #
+#                                                                              #
+#   : Some effect codes may not work on all terminal emulators                 #
+#                                                                              #
+#   See Also:                                                                  #
+#------------------------------------------------------------------------------#
+#     man console_codes                                                        #
+#     https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit           #
+#------------------------------------------------------------------------------#
+#<<
+
+#>> the variables
+local rst                                               # reset everything
+local bld dim itl und fla inv                           # set effects
+local rbld ritl rund rfla rinv                          # reset effects
+local blk red grn ylw blu mag cyn wht                   # set normal fg colors
+local blkb redb grnb ylwb blub magb cynb whtb           # set bright fg colors
+local blknb rednb grnnb ylwnb blunb magnb cynnb whtnb   # set normal bg colors
+local blkbb redbb grnbb ylwbb blubb magbb cynbb whtbb   # set bright bg colors
+local rfg rbg                                           # reset fg/bg colors
+
+#-------------------------------------------------------------------------------
+# OPT: these are not widely supported - uncomment here and below to use
+# local hid str dund                                      # set effects
+# local rhid rstr                                         # reset effects
+#-------------------------------------------------------------------------------
+#<<
+
+# reset everything
+rst="\e[0m"         # resets everything to no colors/no effects
+
+#>> set effects
+bld="\e[1m"         # set bold
+dim="\e[2m"         # set dim
+itl="\e[3m"         # set italic
+und="\e[4m"         # set underline
+fla="\e[5m"         # set flash a.k.a. blink
+inv="\e[7m"         # set inverse
+
+#-------------------------------------------------------------------------------
+# OPT: these are not widely supported - uncomment to use
+# hid="\e[8m"         # set hidden/not visible (not widely supported)
+# str="\e[9m"         # set strikethrough (not widely supported)
+# dund="\e[21m"       # set double underline (not widely supported)
+#<<
+
+#>> reset effects
+rbld="\e[22m"       # reset bold and/or dim
+ritl="\e[23m"       # reset italic
+rund="\e[24m"       # reset underline (single and double, if in use)
+rfla="\e[25m"       # reset flash a.k.a. blink
+rinv="\e[27m"       # reset inverse
+
+#-------------------------------------------------------------------------------
+# OPT: these are not widely supported - uncomment to use
+# rhid="\e[28m"       # reset hidden/invisible (not widely supported)
+# rstr="\e[29m"       # reset strikethrough (not widely supported)
+#<<
+
+#>> set normal fg colors
+blk="\e[30m"
+red="\e[31m"
+grn="\e[32m"
+ylw="\e[33m"
+blu="\e[34m"
+mag="\e[35m"
+cyn="\e[36m"
+wht="\e[37m"
+#<<
+
+#>> set bright fg colors
+blkb="\e[90m"
+redb="\e[91m"
+grnb="\e[92m"
+ylwb="\e[93m"
+blub="\e[94m"
+magb="\e[95m"
+cynb="\e[96m"
+whtb="\e[97m"
+#<<
+
+#>> set normal bg colors
+blknb="\e[40m"
+rednb="\e[41m"
+grnnb="\e[42m"
+ylwnb="\e[43m"
+blunb="\e[44m"
+magnb="\e[45m"
+cynnb="\e[46m"
+whtnb="\e[47m"
+#<<
+
+#>> set bright bg colors
+blkbb="\e[100m"
+redbb="\e[101m"
+grnbb="\e[102m"
+ylwbb="\e[103m"
+blubb="\e[104m"
+magbb="\e[105m"
+cynbb="\e[106m"
+whtbb="\e[107m"
+#<<
+
+#>> reset colors
+rfg="\e[39m"        # reset foreground to default
+rbg="\e[49m"        # reset background to default
+#<<
+
+#>> 256 color prefixes
+# returns a 256-color escape sequence (e.g. \e[38;5;137m) or fails silently if
+# invalid arguments are provided
+# @arg mode: string   - the color mode to set (f: foreground, b: background)
+# @arg color: int     - the desired color from the 256 color palette
+# usage: call using command subtitution: "$(z256 f 137)"
+#<<
+function z256() {
+    # validate the arguments
+    [[ $# -eq 2 ]] && [[ "$1" =~ "f|b" ]] && [[ "$2" =~ ^[[:digit:]]+$ ]] || return
+
+    # set fg/bg mode
+    local -i mode
+    [[ "$1" = "f" ]] && mode=38
+    [[ "$1" = "b" ]] && mode=48
+
+    # print the color sequence
+    # printf "\e[%s;5;%sm" "$mode" "$2"
+    echo "\e[${mode};5;${2}m"
+}
+
+#>> rgb color prefixes
+# These functions will only work under the following conditions:
+#   1. the COLORTERM variable is set to 'truecolor' or '24bit', --or--
+#   2. the WT_SESSION variable is set
+# If either test is false, they will fail silently and return nothing.
+#
+# These checks will cover most *nix terminal emulators and, in the case of the
+# second condition, Windows Terminal. While this detection method is far from
+# perfect and will almost certainly exclude some terminal emulators that
+# shouldn't be, it is a simple method that covers most scenarios and prevents
+# this simple library file from getting way more complex than it needs to be.
+# If a more accurate means of determinign color rendering capabilities comes
+# along, I will be more than happy to change the tests.
+#
+# If you want to go down the rabbit hole, be my guest:
+#   https://www.google.com/search?q=terminal+set+COLORTERM
+
+# returns an rgb color escape sequence (e.g. \e[38;2;27;4;33m) or fails silently
+# if invalid arguments are provided
+# @arg mode: string   - the color mode to set (f: foreground, b: background)
+# @arg red: int       - the red component value
+# @arg green: int     - the green component value
+# @arg blue: int      - the blue component value
+# usage: call using command subtitution: "$(zrgb b 27 4 33)"
+#<<
+function zrgb() {
+
+    # see if terminal can handle the power of rgb
+    [[ -n "$COLORTERM" && "$COLORTERM" =~ "truecolor|24bit" ]] || \
+        [[ -n "$WT_SESSION" ]] || return
+
+    # validate step 1
+    if [[ $# -eq 4 ]] && [[ "$1" =~ "f|b" ]] ; then
+
+        # set fg/bg mode
+        local -i mode
+        [[ "$1" = "f" ]] && mode=38
+        [[ "$1" = "b" ]] && mode=48
+        shift
+
+        # validate step 2
+        for n in "$@" ; do
+            [[ "$n" =~ ^[[:digit:]]+$ ]] || return
+        done
+
+        # print color sequence
+        printf "\e[%s;2;%s;%s;%sm" "$mode" "$1" "$2" "$3"
+    fi
+}

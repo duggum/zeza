@@ -1,0 +1,139 @@
+# one entry per line in the form: code=description
+# comments are preceded by a '#'
+# '#>>' and '#<<' denote a folding region in VS Code
+# see: https://github.com/eza-community/eza/blob/main/man/eza_colors.5.md
+
+#>> LS CODES USED BY EZA
+# ------------------------------------------------------------------------------
+fi="normal file"
+di="directory"
+ln="symbolic link"
+pi="named pipe (fifo)"
+bd="block device"
+cd="character device"
+so="socket"
+ex="executable"
+or="orphan symlink"
+#<<
+
+#>> PERMISSIONS
+# ------------------------------------------------------------------------------
+oc="octal"
+ur="user +r bit"
+uw="user +w bit"
+ux="user +x bit (files)"
+ue="user +x bit (other file types)"
+gr="group +r bit"
+gw="group +w bit"
+gx="group +x bit"
+tr="others +r bit"
+tw="others +w bit"
+tx="others +x bit"
+su="higher bits (files)"
+sf="higher bits (other types)"
+xa="extended attribute marker"
+#<<
+
+#>> FILE SIZES
+# ------------------------------------------------------------------------------
+sn="size numbers"
+sb="size unit"
+df="major device id"
+ds="minor device id"
+#<<
+
+#>> SIZE NUMBER AND UNIT SUB-SETTINGS
+# ------------------------------------------------------------------------------
+nb="numbers < 1 KB"
+nk="numbers 1 KB to 1 MB"
+nm="numbers 1 MB to 1 GB"
+ng="numbers 1 GB to 1 TB"
+nt="numbers 1 TB and up"
+ub="units < 1 KB"
+uk="units 1 KB to 1 MB"
+um="units 1 MB to 1 GB"
+ug="units 1 GB to 1 TB"
+ut="units 1 TB and up"
+#<<
+
+#>> OWNERS AND GROUPS
+# ------------------------------------------------------------------------------
+uu="user you"
+uR="user root"
+un="user other"
+gu="group you"
+gR="group root"
+gn="group other"
+#<<
+
+#>> HARD LINKS
+# ------------------------------------------------------------------------------
+lc="number of links"
+lm="multi-link file"
+#<<
+
+#>> GIT
+# ------------------------------------------------------------------------------
+ga="new"
+gm="modified"
+gd="deleted"
+gv="renamed"
+gt="typechange"
+gi="ignored"
+gc="conflicted"
+#<<
+
+#>> GITREPO
+# ------------------------------------------------------------------------------
+Gm="branch_main"
+Go="branch_other"
+Gc="git_clean"
+Gd="git_dirty"
+#<<
+
+#>> DETAILS AND METADATA
+# ------------------------------------------------------------------------------
+xx="punctuation"
+da="timestamp"
+in="file inode"
+bl="number of blocks"
+hd="table header row"
+ff="BSD file flags"
+lp="symlink path"
+cc="control character"
+#<<
+
+#>> OVERLAYS
+# ------------------------------------------------------------------------------
+bO="broken link path"
+#<<
+
+#>> OTHER
+# ------------------------------------------------------------------------------
+sp="special"
+mp="mount point"
+#<<
+
+#>> FILETYPES
+# ------------------------------------------------------------------------------
+im="image file"
+vi="video file"
+mu="lossy music"
+lo="lossless music"
+cr="related to cryptography"
+do="document file"
+co="compressed file"
+tm="temporary file"
+cm="compilation artifact"
+bu="file used to build a project"
+sc="source code"
+#<<
+
+#>> SECURITY CONTEXT
+# ------------------------------------------------------------------------------
+Sn="security context - none"
+Su="selinux user"
+Sr="selinux role"
+St="selinux typ"
+Sl="selinux range"
+#<<
