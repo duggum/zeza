@@ -1,32 +1,65 @@
-# one entry per line in the form: code=ANSI color sequence
-# comments are preceded by a '#'
-# '#>>' and '#<<' denote a folding region in VS Code
-# see: https://github.com/eza-community/eza/blob/main/man/eza_colors.5.md
+#>> EZA CONFIGURATION FILE
+# This is a customizable eza configuration file with all of eza's default color
+# settings applied. You do not have to keep all codes in the file, as eza will
+# use its internal defaults for any color codes it does not find set in the
+# EZA_COLORS environment variable.
+#
+# Rules:
+# ---------------------------------------------------------
+#   1. one entry per line
+#   2. entry format: code="ANSI color sequence" (e.g. or="1;4;37")
+#   3. comments are preceded by a '#' and may be placed after an entry
+#
+# See: https://github.com/eza-community/eza/blob/main/man/eza_colors.5.md for
+# more information
+#
+# eza version: 0.17.0
+#<<
 
-#>> COLOR CHEAT SHEET
+#>> COLOR CODE CHEAT SHEET
 #------------------------------------------------------------------------------#
 #               NORMAL    NORMAL    BRIGHT    BRIGHT                           #
-#   COLOR         FG        BG        FG        BG       EFFECTS               #
+#   COLOR         FG        BG        FG        BG       RESETS                #
 #------------------------------------------------------------------------------#
-#   Black         30        40        90        100      00 Reset              #
-#   Red           31        41        91        101      01 Bold               #
-#   Green         32        42        92        102      02 Dim/Faint          #
-#   Yellow        33        43        93        103      03 Italic             #
-#   Blue          34        44        94        104      04 Underline          #
-#   Magenta       35        45        95        105      05 Blink              #
-#   Cyan          36        46        96        106      07 Inverse            #
-#   White         37        47        97        107      21 Double Underline   #
+#   Black         30        40        90        100      00 Reset Everything   #
+#   Red           31        41        91        101      39 Reset Foreground   #
+#   Green         32        42        92        102      49 Reset background   #
+#   Yellow        33        43        93        103                            #
+#   Blue          34        44        94        104                            #
+#   Magenta       35        45        95        105                            #
+#   Cyan          36        46        96        106                            #
+#   White         37        47        97        107                            #
 #                                                                              #
+#------------------------------------------------------------------------------#
+#   SET EFFECTS             RESET EFFECTS                                      #                         #
+#------------------------------------------------------------------------------#
+#   --- ANY ---             00 Reset Everything (colors and effects)           #
+#   01 Set Bold             22 Reset Bold                                      #
+#   02 Set Dim/Faint        22 Reset Dim (same as reset bold)                  #
+#   03 Set Italic           23 Reset Italic                                    #
+#   04 Set Underline        24 Reset Underline (single or double, if in use)   #
+#   05 Set Blink            25 Reset Blink                                     #
+#   07 Set Inverse          27 Reset Inverse                                   #
+#                                                                              #
+#   --- Not Widely Supported ---                                               #
+#                                                                              #
+#   08 Set Hidden           28 Reset Hidden                                    #
+#   09 Set Strikethrough    29 Reset Strikethrough                             #
+#   21 Double Underline     24 Reset Underline (single or double, if in use)   #
+#                                                                              #
+#------------------------------------------------------------------------------#
 #   256 Colors                                                                 #
 #------------------------------------------------------------------------------#
 #   Foreground: 38;5;nnn    (nnn = three digit color number)                   #
 #   Background: 48;5;nnn                                                       #
 #                                                                              #
+#------------------------------------------------------------------------------#
 #   RGB Colors                                                                 #
 #------------------------------------------------------------------------------#
-#   Foreground: 38;2;r;g;b    (r/g/b = component numbers in the range 0-255)   #
+#   Foreground: 38;2;r;g;b  (r/g/b = component numbers in the range 0-255)     #
 #   Background: 48;2;r;g;b                                                     #
 #                                                                              #
+#------------------------------------------------------------------------------#
 #   Notes                                                                      #
 #------------------------------------------------------------------------------#
 #   : Some (most?) terminal emulators use the bold effect (01) to also enable  #

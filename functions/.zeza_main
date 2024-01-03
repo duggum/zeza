@@ -63,6 +63,7 @@ function zeza() {
     # source the common function header
     builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
 
+    # help text
     local help=$(
         printf "%b %b%bzeza%b\n" "$tag" "$magb" "$itl" "$rst"
         printf "\n"
@@ -104,7 +105,8 @@ function zeza() {
         printf "\n"
         return 0
     fi
-    # if not enough args, help and exit with error
+
+    # if not enough args, show help and exit with error
     if [[ $# -eq 0 ]]; then
         printf "\n"
         printf "%b %bYou must provide a command name%b\n" "$tag" "$red" "$rst" 1>&2
@@ -118,13 +120,10 @@ function zeza() {
     local command="$1"
     shift
 
-    # Subcommand functions start with . so that they don't
-    # appear as completion entries when looking for `omz`
+    # call the command with remaing args, or show help and exit with error
     if (( ${+functions[.zeza::$command]} )) ; then
-        # call the command passing along remaing args
         .zeza::$command "$@"
     else
-        # show help and exit with error
         printf "\n"
         printf "%b %bInvalid command name: '$command'%b\n" "$tag" "$red" "$rst" 1>&2
         printf "\n"
@@ -133,7 +132,7 @@ function zeza() {
         return 69
     fi
 
-    # return whatever code the called command returns
+    # return whatever exit code the called command returns
     return $?
 }
 
@@ -174,6 +173,7 @@ function .zeza::configure() {
     # source the common function header
     builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
 
+    # help text
     local help=$(
         printf "%b %b%bzeza configure%b\n" "$tag" "$magb" "$itl" "$rst"
         printf "\n"
@@ -212,8 +212,9 @@ function .zeza::configure() {
     local keep_existing=false   # if using an existing config
     local response              # for user replies
 
-    # if user wants to put config somewhere unique see if it is a writeable location
+    # if user wants to put config somewhere unique see if it is a valid location
     if [[ -n "$1" ]] ; then
+
         # get the absolute path (':P')
         local dir="${1:P}"
 
@@ -222,6 +223,8 @@ function .zeza::configure() {
             printf "\n"
             printf "%b %bDirectory does not exist, would you like to create it" "$tag" "$wht"
             read -q "response? (y/N)?"
+
+            # create the directory, or cancel configuration
             if [[ $response = "y" ]] ; then
                 printf "\n"
                 printf "%b %bCreating directory..." "$tag" "$wht"
@@ -248,7 +251,7 @@ function .zeza::configure() {
             return 77
         fi
     else
-        # use deafult location for custiom config
+        # use default location for custiom config
         config_file=$HOME/$ZEZA[CFG_FILENAME]
     fi
 
@@ -258,8 +261,7 @@ function .zeza::configure() {
         printf "%b %bYour backup can be restored to: %b%s%b\n" "$tag" "$wht" "$cyn" "$config_file" "$rst"
         printf "%b %bWhat would you like to do: use (b)ackup, create (n)ew, or (C)ancel" "$tag" "$wht"
         read -k 1 "response? (b/n/C)?"
-        # ':l"' converts to lowercase
-        if [[ $response:l = "b" ]] ; then
+        if [[ $response:l = "b" ]] ; then   # ':l"' converts to lowercase
             .zeza::restore "${config_file:h}"
             return 0
         elif [[ $response:l = "n" ]] ; then
@@ -272,8 +274,9 @@ function .zeza::configure() {
         fi
     fi
 
-    # see if the currently assigned config file has gone missing, but don't bother
-    # if 'no color' mode is set because there ar no current settings in that mode
+    # see if the currently assigned config file has gone missing, but don't
+    # bother if 'no color' mode is set because there are no 'current settings'
+    # in 'no color' mode
     if [[ ! -f "$ZEZA[CURRENT_SETTINGS]" && ! -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
         printf "%b %bThe previously set configuration file is missing!%b\n" \
             "$tag" "$red" "$rst"
@@ -283,8 +286,9 @@ function .zeza::configure() {
         printf "%b %bWould you still like to proceed" "$tag" "$wht"
         read -q "response? (y/N)?"
         if [[ $response = "y" ]] ; then
-            # reset this to avoid repeating this check if this whole process is
-            # cancelled before a new config file is assigned
+            # reset 'current settings' to avoid repeating this check if the user
+            # cancels the configuration without actually creating a new config
+            # or using an existing file
             ZEZA[CURRENT_SETTINGS]=""
             printf "\n"
         else
@@ -293,16 +297,11 @@ function .zeza::configure() {
         fi
     fi
 
-    # tell user where the new config file will be stored
-    printf "%b %bConfiguration file will be %b%s%b\n" \
-        "$tag" "$wht" "$cyn" "$config_file" "$rst"
-
-    # if a config file already exists at this location
+    # if a config file already exists at the chosen location
     if [[ -f "$config_file" ]] ; then
-        printf "%b %bA configuration file already exists at that location!%b\n" "$tag" "$ylw" "$rst"
+        printf "%b %bA configuration file already exists at %b%s%b\n" "$tag" "$ylw" "$cyn" "$config_file" "$rst"
         printf "%b %bWhat would you like to do: use (e)xisting, (o)verwrite, or (C)ancel" "$tag" "$wht"
         read -k 1 "response? (e/o/C)?"
-        # (L) converts to lowercase
         if [[ $response:l = "e" ]] ; then
             keep_existing=true
             do_copy=false
@@ -315,14 +314,18 @@ function .zeza::configure() {
         printf "\n"
     fi
 
+    # tell user where the new config file will be stored
+    printf "%b %bConfiguration file will be %b%s%b\n" \
+        "$tag" "$wht" "$cyn" "$config_file" "$rst"
+
+
     # if current settings is set and is NOT the default config
     if [[ -n "$ZEZA[CURRENT_SETTINGS]" ]] && \
         [[ "$ZEZA[CURRENT_SETTINGS]" != "$ZEZA[DEFAULTS_FILE]" ]] ; then
 
-        # if new location is different than current location, give user the choice
-        # to keep the previously set configuration or create a new one
+        # if new location is different than current location, give user a chance
+        # to keep the previously set configuration, or create a new one
         if [[ "$config_file" != "$ZEZA[CURRENT_SETTINGS]" ]] ; then
-
             printf "%b %bA previous configuration file exists at %b%s%b\n" \
                 "$tag" "$ylw" "$cyn" "$ZEZA[CURRENT_SETTINGS]" "$rst"
             printf "%b %bWhat would you like to do: use (e)xisting, create (n)ew, or (C)ancel" \
@@ -342,6 +345,8 @@ function .zeza::configure() {
                     printf "\n"
                     printf "%b %bDeleting previous configuration..." "$tag" "$wht"
                     rm -f "$ZEZA[CURRENT_SETTINGS]"
+                    # again, clear this in case the user cancels
+                    ZEZA[CURRENT_SETTINGS]=""
                     printf "%bDONE%b\n" "$grn" "$rst"
                 else
                     printf "\n%b %bYou should remove old configuration files to avoid confusion.%b\n" \
@@ -390,7 +395,7 @@ function .zeza::configure() {
     ZEZA[CURRENT_SETTINGS]="$config_file"
     printf "%bDONE%b\n" "$grn" "$rst"
 
-    # make sure default and no color modes are disabled
+    # disable default & no color modes, and clear EZA_COLORS state
     .zeza-delete-cache-file default nocolor eza_colors
 
     # update all the settings based on the new config
@@ -443,6 +448,7 @@ function .zeza::default() {
 
     printf "\n"
 
+    # help text
     local help=$(
         printf "%b %b%bzeza default%b\n" "$tag" "$magb" "$itl" "$rst"
         printf "\n"
@@ -471,6 +477,9 @@ function .zeza::default() {
     # for user replies
     local response
 
+    # 'cfg_missing' is ONLY used to call this from 'zeza.plugin.zsh' on plugin
+    # load if the config file has gone missing. We don't want to prompt the user
+    # so we just bypass the prompt and switch to defaults
     if [[ "$1" = "cfg_missing" ]] ; then
         response="y"
     else
@@ -498,6 +507,7 @@ function .zeza::default() {
                     return $?
                 fi
             fi
+
             # switch to default config file
             ZEZA[CURRENT_SETTINGS]="$ZEZA[DEFAULTS_FILE]"
         fi
@@ -506,10 +516,10 @@ function .zeza::default() {
         .zeza-load-settings || return $?
         .zeza-load-ezacolors || return $?
 
-        # set deafult mode
+        # set default mode
         .zeza-enable-mode default
 
-        # all the information
+        # some useful information
         printf "%b %bNote: %bEZA_COLORS is %bnot%b set in default mode. Eza's color output%b\n" \
             "$tag" "$red" "$wht" "$bld" "$rbld" "$rst"
         printf "              %bis generated using the program's internal defaults which%b\n" \
@@ -524,7 +534,7 @@ function .zeza::default() {
     # show status
     .zeza::status
 
-    return $?
+    return 0
 }
 
 #>>
@@ -558,6 +568,7 @@ function .zeza::demo() {
 
     printf "\n"
 
+    # help text
     local help=$(
         printf "%b %b%bzeza demo%b\n" "$tag" "$magb" "$itl" "$rst"
         printf "\n"
@@ -588,8 +599,10 @@ function .zeza::demo() {
 
         # necessary vars
         local code color desc
-        local -a ezacodes=( "${(@f)ZEZA[CODES]}" ) # eza color codes and descriptions
-        local -a ezacolors=( "${(@f)ZEZA[SETTINGS]}" ) # current settings from config file
+
+        # import data
+        local -a ezacodes=( "${(@f)ZEZA[CODES]}" ) # codes and descriptions
+        local -a ezacolors=( "${(@f)ZEZA[SETTINGS]}" ) # config file settings
 
         # display output label
         printf "\n"
@@ -597,7 +610,7 @@ function .zeza::demo() {
         [[ -f "$ZEZA[DEFAULT_CACHE]" ]] && printf " (DEFAULT MODE)"
         printf "%b\n\n"  "$rst"
 
-        # if the column command is available (should be on most *nix systems)
+        # use the column command if available (should be on most *nix systems)
         if (( $+commands[column] )); then
 
             # use temp file to hold data
@@ -631,8 +644,9 @@ function .zeza::demo() {
             # clean up - it's not the end of world if this fails since 'rm -f' is
             # silent and the temp file will be deleted upon logout/login anyway
             rm -f $outfile
+
+        # 'printf' output isn't as pretty as 'column', but gets the job done
         else
-            # 'printf' output isn't as pretty as 'column', but gets the job done
             printf "\e[03;95m%-13s   %-13s   %-36s\e[0m\n" "Code/File Ext" "Color" "Description"
             printf "\e[90m%-13s   %-13s   %-36s\e[0m\n" \
                 "-------------" "-------------" "------------------------------------"
@@ -653,6 +667,7 @@ function .zeza::demo() {
         printf "\n"
         return 78
     fi
+
     return 0
 }
 
@@ -696,6 +711,7 @@ function .zeza::nocolor() {
 
     printf "\n"
 
+    # help text
     local help=$(
         printf "%b %b%bzeza nocolor%b\n" "$tag" "$magb" "$itl" "$rst"
         printf "\n"
@@ -734,7 +750,7 @@ function .zeza::nocolor() {
     if [[ $response:l = "y" ]] ; then
         printf "\n"
 
-        # make sure default mode is disabled
+        # clear caches
         .zeza-delete-cache-file default eza_colors user_cfg
 
         # if current settings are NOT default
@@ -801,6 +817,7 @@ function .zeza::refresh() {
 
     printf "\n"
 
+    # help text
     local help=$(
         printf "%b %b%bzeza refresh%b\n" "$tag" "$magb" "$itl" "$rst"
         printf "\n"
@@ -829,12 +846,14 @@ function .zeza::refresh() {
 
     # only refresh if NOT in default or no color modes
     if [[ ! -f $ZEZA[DEFAULT_CACHE] && ! -f $ZEZA[NO_COLOR_CACHE] ]] ; then
+
         # update all the settings based on the config
         .zeza-load-settings || return $?
         .zeza-load-ezacolors || return $?
 
         # set EZA_COLORS using config
         .zeza-update-eza
+
         printf "\n"
 
         # show demo if desired
@@ -888,6 +907,7 @@ function .zeza::reset() {
 
     printf "\n"
 
+    # help text
     local help=$(
         printf "%b %b%bzeza reset%b\n" "$tag" "$magb" "$itl" "$rst"
         printf "\n"
@@ -920,9 +940,10 @@ function .zeza::reset() {
         return 0
     fi
 
-    # sweet and simple for unset
+    # unset
     if [[ "$1" =~ ^(-u|--unset)$ ]] ; then
 
+        # remove the reset cache file if it exists
         if [[ -f "$ZEZA[RESET_CACHE]" ]] ; then
 
             # delete the reset mode cache file
@@ -939,17 +960,16 @@ function .zeza::reset() {
 
             # show status
             .zeza::status
-
-            return 0
         else
             printf "%b %bThe reset flag is not set!%b" "$tag" "$ylw" "$rst"
             printf "$cancelled"
             printf "\n"
-            return 0
         fi
+
+        return 0
     fi
 
-    # no sense continuing if rest flag is already set
+    # no sense continuing if reset flag is already set
     if [[ -f "$ZEZA[RESET_CACHE]" ]] ; then
         printf "%b %bThe reset flag is already set in EZA_COLORS!%b\n" "$tag" "$ylw" "$rst"
         printf "%b %bRun '%b%becho \$EZA_COLORS%b%b' to verify.%b\n" \
@@ -969,27 +989,28 @@ function .zeza::reset() {
 
         printf "\n"
 
-        # only do this if NOT in default or no color modes
-        if [[ ! -f "$ZEZA[DEFAULT_CACHE]" && ! -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
-
-            # make sure all settings are current
-            .zeza-load-settings || return $?
-            .zeza-load-ezacolors || return $?
-
-            # update EZA_COLORS with the reset flag
-            .zeza-update-eza reset
-
-            # enable reset flag mode
-            .zeza-enable-mode reset
-        else
+        # exit if in default or no color mode
+        if [[ -f "$ZEZA[DEFAULT_CACHE]" || -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
             printf "%b %bReset is only available for custom configurations!%b\n" \
                 "$tag" "$red" "$rst" 1>&2
             printf "%b %bRun '%b%bzeza configure%b%b' to create a custom configuration.%b\n" \
                 "$tag" "$wht" "$magb" "$itl" "$ritl" "$wht" "$rst" 1>&2
             printf "\n"
+
+            # show configure help text
             .zeza::configure --help
             return 64
         fi
+
+        # make sure all settings are current
+        .zeza-load-settings || return $?
+        .zeza-load-ezacolors || return $?
+
+        # update EZA_COLORS with the reset flag
+        .zeza-update-eza reset
+
+        # enable reset flag mode
+        .zeza-enable-mode reset
     else
         printf "$cancelled"
     fi
@@ -1031,6 +1052,7 @@ function .zeza::restore() {
 
     printf "\n"
 
+    # help text
     local help=$(
         printf "%b %b%bzeza restore%b\n" "$tag" "$magb" "$itl" "$rst"
         printf "\n"
@@ -1075,7 +1097,7 @@ function .zeza::restore() {
                 .zeza-file-system-error read "$src" "file is not readable or does not exist"
                 return 66
             fi
-            ;&
+            ;&  # fallthrough
         1)
             # if src isn't already set
             if [[ -z $src ]] ; then
@@ -1089,8 +1111,9 @@ function .zeza::restore() {
                     return 66
                 fi
             fi
-            # make sure destination is a directory
-            dest="${1:P}"
+
+            # make sure destination is a directory; ask to create if not
+            dest="${1:P}"   # ':P' gets absolute path
             if [[ ! -d "$dest" ]] ; then
                 printf "%b %b%s%b does not exist, would you like to create it" "$tag" "$cyn" "$dest" "$wht"
                 read -q "response? (y/N)?"
@@ -1120,7 +1143,7 @@ function .zeza::restore() {
             fi
             ;;
         *)
-            printf "%b %bMissing operands.%b\n" "$tag" "$red" "$rst"
+            printf "%b %bMissing or too many arguments.%b\n" "$tag" "$red" "$rst"
             printf "\n"
             print $help
             printf "\n"
@@ -1137,9 +1160,10 @@ function .zeza::restore() {
 
         printf "\n"
 
-        # if user wants to restore cached backup file
+        # if restoring cached backup file
         if [[ $# -eq 1 ]]; then
             .zeza-cache-backup restore "$dest"
+
         # if using a custom backup file
         elif [[ $# -eq 2 ]] ; then
 
@@ -1157,7 +1181,7 @@ function .zeza::restore() {
         ZEZA[CURRENT_SETTINGS]="$dest"
         printf "%bDONE%b\n" "$grn" "$rst"
 
-        # make sure default and no color modes are disabled
+        # clear appropriate cache files
         .zeza-delete-cache-file default eza_colors nocolor
 
         # update all the settings based on the restored config
@@ -1166,6 +1190,7 @@ function .zeza::restore() {
 
         # set EZA_COLORS using config
         .zeza-update-eza
+
         printf "\n"
     else
         printf "$cancelled"
@@ -1213,6 +1238,7 @@ function .zeza::status() {
 
     printf "\n"
 
+    # help text
     local help=$(
         printf "%b %b%bzeza status%b\n" "$tag" "$magb" "$itl" "$rst"
         printf "\n"
@@ -1238,6 +1264,7 @@ function .zeza::status() {
         return 0
     fi
 
+    # output heading
     printf "%b %b%bCurrent EZA Environment%b\n" "$tag" "$(z256 f 246)" "$und" "$rst"
     printf "\n"
 
@@ -1256,10 +1283,8 @@ function .zeza::status() {
     # print color mode and config file info
     local mode cfg_file
     if [[ -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
-
         mode="${redb}No Color${rst}"
         cfg_file="None"
-
     elif [[ -f "$ZEZA[DEFAULT_CACHE]" ]]; then
         mode="${ylwb}Eza Defaults${rst}"
         cfg_file="None"
@@ -1287,6 +1312,7 @@ function .zeza::status() {
         printf "%bFalse%b\n" "$red" "$rst"
     fi
 
+    # useful info for 'no color' mode
     if [[ -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
         printf "\n"
         printf "\t%b%bTo exit 'no color' mode%b\n" "$(z256 f 246)" "$und" "$rst"
@@ -1298,6 +1324,7 @@ function .zeza::status() {
         printf "\t    %b*%b run '%b%bzeza_config [dir]%b%b' to start a new custom configuration.%b\n" \
             "$ylwb" "$wht" "$magb" "$itl" "$ritl" "$wht" "$rst"
     fi
+
     printf "\n"
 
     return 0
@@ -1341,6 +1368,7 @@ function .zeza::tables() {
 
     printf "\n"
 
+    # help text
     local help=$(
         printf "%b %b%bzeza tables%b\n" "$tag" "$magb" "$itl" "$rst"
         printf "\n"
@@ -1384,7 +1412,7 @@ function .zeza::tables() {
         return 0
     fi
 
-    # display test text for bold/bright
+    # bold/bright test text
     if [[ "$1" =~ ^(-t|--test)$ ]] ; then
         printf "%b %b%bbold/bright color test%b\n" "$tag" "$magb" "$itl" "$rst"
         printf "\n"
@@ -1456,19 +1484,15 @@ function .zeza::tables() {
     # colorful label divider
     local div="$ylwb$bld/$rst"
 
-    # holds the information to be printed in each table
+    # holds the information to be printed in each ANSI table
     local label header fore back fg
 
     # was an invalid option provided?
     local invalid=true
 
     # assign table values based on desired format and call print function
-    # ';|' allows fallthrough to subsequent cases
+    # ';|' allows fallthrough to subsequent cases for -a, --all
     case "$1" in
-        "-a"|"--all")
-            # just fall through
-            invalid=false
-            ;|
         "--256"|"-a"|"--all") # 256 color table
             printf "%b %b%b256 Color Palette%b\n" "$tag" "$bld" "$whtb" "$rst"
             .zeza-256-colors
@@ -1520,7 +1544,7 @@ function .zeza::tables() {
 }
 
 #-------------------------------------------------------------------------------
-# COMPLETIONS
+# ZSH COMPLETIONS
 #-------------------------------------------------------------------------------
 
 # completions function based on info and examples found here:
@@ -1621,7 +1645,7 @@ function _zeza {
     return 0
 }
 
-# If run from a script, do not set the completion function
+# set the completions function
 if (( ${+functions[compdef]} )); then
     compdef _zeza zeza
 fi
