@@ -27,7 +27,7 @@ $^{1}$ *[Everything you never wanted to know about ANSI escape codes](https://no
 
 ### Example
 
-`\e[01;04;33mHELLO WORLD\e[0m]`
+`\e[01;04;33mHELLO WORLD\e[0m`
 
 The example above will result in the words 'HELLO WORLD' printed in bold (`01`),
 underlined (`04`), yellow (`33`) text. The sequence `\e[0m` after the text resets
@@ -35,7 +35,8 @@ all effects and colors to the system default, which is typically no color and no
 effects.
 
 Note that the leading `0` is not required, so `\e[1;4;33m` will yield the same
-results.
+results. In fact, \e[00m, \e[0m and \e[m are equivalent expressions for the global
+reset sequence.
 
 ## Foreground/Background Colors and Resets
 

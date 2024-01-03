@@ -619,7 +619,7 @@ function .zeza-ansi-colors() {
     printf "$spacer\n"
 
     # print a line for each foreground color code
-    local f
+    local f fg
     for f in "${(@)fore}" ; do
 
         # trim spaces to use for actual color assignment in the table output
