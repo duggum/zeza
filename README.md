@@ -88,6 +88,18 @@ alias ell='e -lagh'
 
 For help with individual commands, run `zeza <command> --help`
 
+### Configure
+
+As the name implies, this will be the primary command you use to configure `eza`.
+
+There is no need to edit `EZA_COLORS` directly. The `configure` command will copy
+a thoroughly commented and fully customizable default configuration file called
+`.zeza_custom.eza` to a location of your choosing (default is `$HOME`). Simply
+edit the color assignments and run `zeza refresh` to apply your changes.
+
+There is a handy [cheatsheet](docs/cheatsheet.md) available in the `docs`
+directory to help you if needed.
+
 ### Tables
 
 The `tables` command can be especially helpful as it displays a variety of color tables that demonstrate the rendering
@@ -123,6 +135,10 @@ Documentation for the main code files can be found at:
 * [zeza-utils](docs/utils.md)
 
 ## Learn More
+
+ANSI Color Sequence Cheatsheet
+
+- [Color Code Cheatsheet](docs/cheatsheet.md)
 
 For `eza` see the following man pages:
 

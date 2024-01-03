@@ -1,6 +1,6 @@
 # zeza Plugin TODO List
 
-- [ ] Create .md file from Color Code Cheat Sheet comment block
+- [X] Create .md file from Color Code Cheat Sheet comment block
 - [ ] Add ability to get plugin version from CLI and/or 'zeza status'
 - [ ] Use Makefile to generate documentation instead of zsh script???
 - [ ] Confirm behavior of '\e[53m' in .zeza-ansi-colors
