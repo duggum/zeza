@@ -1,5 +1,8 @@
 # zeza Plugin TODO List
 
+- [ ] Create .md file from Color Code Cheat Sheet comment block
+- [ ] Use Makefile to generate documentation instead of zsh script???
+- [ ] Confirm behavior of '\e[53m' in .zeza-ansi-colors
 - [ ] Add a few more ***useful*** aliases
 - [ ] Ensure consistent comment block formatting
 - [ ] Ensure consistent use/non-use of double quotes and curly braces

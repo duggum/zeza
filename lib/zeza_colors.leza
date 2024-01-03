@@ -35,30 +35,50 @@
 #       printf "%b%bBold, red text!%b" "$bld" "$red" "$rst"
 #<<
 
-#>> COLOR CHEAT SHEET
+#>> COLOR CODE CHEAT SHEET
 #------------------------------------------------------------------------------#
 #               NORMAL    NORMAL    BRIGHT    BRIGHT                           #
-#   COLOR         FG        BG        FG        BG       EFFECTS               #
+#   COLOR         FG        BG        FG        BG       RESETS                #
 #------------------------------------------------------------------------------#
-#   Black         30        40        90        100      00 Reset              #
-#   Red           31        41        91        101      01 Bold               #
-#   Green         32        42        92        102      02 Dim/Faint          #
-#   Yellow        33        43        93        103      03 Italic             #
-#   Blue          34        44        94        104      04 Underline          #
-#   Magenta       35        45        95        105      05 Blink              #
-#   Cyan          36        46        96        106      07 Inverse            #
-#   White         37        47        97        107      21 Double Underline   #
+#   Black         30        40        90        100      00 Reset Everything   #
+#   Red           31        41        91        101      39 Reset Foreground   #
+#   Green         32        42        92        102      49 Reset background   #
+#   Yellow        33        43        93        103                            #
+#   Blue          34        44        94        104                            #
+#   Magenta       35        45        95        105                            #
+#   Cyan          36        46        96        106                            #
+#   White         37        47        97        107                            #
 #                                                                              #
+#------------------------------------------------------------------------------#
+#   SET EFFECTS             RESET EFFECTS                                      #                         #
+#------------------------------------------------------------------------------#
+#   --- ANY ---             00 Reset Everything (colors and effects)           #
+#   01 Set Bold             22 Reset Bold                                      #
+#   02 Set Dim/Faint        22 Reset Dim (same as reset bold)                  #
+#   03 Set Italic           23 Reset Italic                                    #
+#   04 Set Underline        24 Reset Underline (single or double, if in use)   #
+#   05 Set Blink            25 Reset Blink                                     #
+#   07 Set Inverse          27 Reset Inverse                                   #
+#                                                                              #
+#   --- Not Widely Supported ---                                               #
+#                                                                              #
+#   08 Set Hidden           28 Reset Hidden                                    #
+#   09 Set Strikethrough    29 Reset Strikethrough                             #
+#   21 Double Underline     24 Reset Underline (single or double, if in use)   #
+#                                                                              #
+#------------------------------------------------------------------------------#
 #   256 Colors                                                                 #
 #------------------------------------------------------------------------------#
 #   Foreground: 38;5;nnn    (nnn = three digit color number)                   #
 #   Background: 48;5;nnn                                                       #
 #                                                                              #
+#------------------------------------------------------------------------------#
 #   RGB Colors                                                                 #
 #------------------------------------------------------------------------------#
-#   Foreground: 38;2;r;g;b    (r/g/b = component numbers in the range 0-255)   #
+#   Foreground: 38;2;r;g;b  (r/g/b = component numbers in the range 0-255)     #
 #   Background: 48;2;r;g;b                                                     #
 #                                                                              #
+#------------------------------------------------------------------------------#
 #   Notes                                                                      #
 #------------------------------------------------------------------------------#
 #   : Some (most?) terminal emulators use the bold effect (01) to also enable  #
@@ -209,6 +229,7 @@ function z256() {
 # These functions will only work under the following conditions:
 #   1. the COLORTERM variable is set to 'truecolor' or '24bit', --or--
 #   2. the WT_SESSION variable is set
+#
 # If either test is false, they will fail silently and return nothing.
 #
 # These checks will cover most *nix terminal emulators and, in the case of the
@@ -216,7 +237,7 @@ function z256() {
 # perfect and will almost certainly exclude some terminal emulators that
 # shouldn't be, it is a simple method that covers most scenarios and prevents
 # this simple library file from getting way more complex than it needs to be.
-# If a more accurate means of determinign color rendering capabilities comes
+# If a more accurate means of determining color rendering capabilities comes
 # along, I will be more than happy to change the tests.
 #
 # If you want to go down the rabbit hole, be my guest:

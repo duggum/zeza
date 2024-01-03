@@ -53,7 +53,7 @@ function .zeza-file-system-error() {
     [[ $1 = "read" ]] && text="$1 from"
     [[ $1 = "write" ]] && text="$1 to"
 
-    # print messages
+    # print error messages
     printf "%b %bFile system %s error!%b\n" "$tag" "$red" "$1" "$rst" 1>&2
     printf "%b %bUnable to %s: %b%s %b\n" "$tag" "$red" "$text" "$cyn" "$2" "$rst" 1>&2
     [[ -n "$3" ]] && printf "%b %bError: %b%s%b\n" "$tag" "$red" "$wht" "$3" "$rst" 1>&2
@@ -93,9 +93,11 @@ function .zeza-run-command() {
     )" || 'builtin' 'printf' '-v' '__erc' '%3d%18d' "$?" '3'
     'builtin' 'emulate' '-L' 'zsh' '-o' 'no_multibyte'
     'builtin' 'local' '-i' n='__erc[-18,-1]'
+
     # adaptation to remove trailing whitespace and save output to the ZEZA array
     ZEZA[CMD_OUT]="${__erc[-n-18,-22]%[[:space:]]}"
     ZEZA[CMD_ERR]="${__erc[1,-n-19]%[[:space:]]}"
+
     #! original code
     #! 'builtin' 'local' 'a' 'reply'
     #! 'builtin' 'set' '-A' 'reply' "$__erc[-n-18,-22]" "$__erc[1,-n-19]"
@@ -239,6 +241,7 @@ function .zeza-load-ezacolors() {
     if [[ -r "$ZEZA[EZA_COLORS_CACHE]" ]]; then
         .zeza-run-command cat "$ZEZA[EZA_COLORS_CACHE]"
         if [[ $? -eq 0 ]] ; then
+
             # only overwrite if the config file contained something
             if [[ -n $ZEZA[CMD_OUT] ]] ; then
                 ZEZA[COLORS]="$ZEZA[CMD_OUT]"
@@ -281,8 +284,8 @@ function .zeza-load-ezacolors() {
 #<<
 function .zeza-cache-backup() {
 
+    # mv config file to backup; error on failure
     if [[ $# -eq 0 ]]; then
-        # mv config file to backup; error on failure
         printf "%b %bBacking up the user configuration..." "$tag" "$wht"
         .zeza-run-command /usr/bin/mv "$ZEZA[CURRENT_SETTINGS]" "$ZEZA[USER_CONFIG_BU]"
         if [[ $? -ne 0 ]] ; then
@@ -290,8 +293,9 @@ function .zeza-cache-backup() {
             +zeza_file_system_error "write" "$ZEZA[USER_CONFIG_BU]" "$ZEZA[CMD_ERR]"
             return 73
         fi
+
+    # delete the backup cache
     elif [[ "$1" = "delete" ]] ; then
-        # delete the backup cache
         printf "%b %bRemoving the cached backup file..." "$tag" "$wht"
         .zeza-run-command /usr/bin/rm -f "$ZEZA[USER_CONFIG_BU]"
         if [[ $? -ne 0 ]] ; then
@@ -299,8 +303,9 @@ function .zeza-cache-backup() {
             +zeza_file_system_error "write" "$ZEZA[USER_CONFIG_BU]" "$ZEZA[CMD_ERR]"
             return 73
         fi
+
+    # restore to the provided destination
     elif [[ $# -eq 2 && "$1" = "restore" ]] ; then
-        # restore to the provided destination
         printf "%b %bRestoring backup to %b%s%b..." "$tag" "$wht" "$cyn" "$2" "$wht"
         .zeza-run-command /usr/bin/mv "$ZEZA[USER_CONFIG_BU]" "$2"
         if [[ $? -ne 0 ]] ; then
@@ -310,6 +315,7 @@ function .zeza-cache-backup() {
         fi
     fi
     printf "%bDONE%b\n" "$grn" "$rst"
+
     return 0
 }
 
@@ -338,6 +344,7 @@ function .zeza-cache-backup() {
 function .zeza-delete-cache-file() {
 
     local arg
+
     # delete each file requested
     for arg in "${@}"; do
         case "$arg" in
@@ -363,6 +370,7 @@ function .zeza-delete-cache-file() {
         esac
         printf "%bDONE%b\n" "$grn" "$rst"
     done
+
     return 0
 }
 
@@ -391,10 +399,10 @@ function .zeza-delete-cache-file() {
 #<<
 function .zeza-enable-mode() {
 
-    # format the arg (no '_' and uppercase)
-    local arg="${$(echo "$1" | sed 's/_/ /'):u}"
-    local msg=">> You have entered the $arg zone!\n>> Do not delete this file!"
+    # we can't just have empty files
+    local msg=">> You have entered the '$1' zone!\n>> Do not delete this file!"
 
+    # create the requested cache file
     printf "%b %bEnabling '%s' mode..." "$tag" "$wht" "$arg"
     case "$1" in
         "nocolor")
@@ -458,7 +466,9 @@ function .zeza-enable-mode() {
 #<<
 function .zeza-update-eza() {
 
-    printf "%b %bUpdating EZA_COLORS..." "$tag" "$wht"
+    printf "%b %bUpdating 'EZA_COLORS'..." "$tag" "$wht"
+
+    # start fresh
     unset EZA_COLORS
     ZEZA[COLORS]=""
 
@@ -533,7 +543,7 @@ function .zeza-256-colors() {
     local -A grid       # stores the color grid
 
     # We want to display the blocks side by side, so it means we'll have to create
-    # each line one my one then display all of them, and after that jump to the
+    # each line one by one then display all of them, and after that jump to the
     # next set of blocks
     local color j
     for color in {016..255}; do
@@ -541,7 +551,7 @@ function .zeza-256-colors() {
         line=$(( ($color - 16) % $lines ))
 
         # Appending the displayed color to the line
-        grid[$line]=$grid[$line]"\e[38;5;${color}m#${color} \e[48;5;${color}m${space}\e[0m  "
+        grid[$line]="$grid[$line]\e[38;5;${color}m#${color} \e[48;5;${color}m${space}\e[0m  "
 
         # Counting how many blocks are filled
         [[ $line = 5 ]] && filled=$(( $filled + 1 ))
@@ -574,7 +584,7 @@ function .zeza-256-colors() {
 # @description
 #   .zeza-ansi-colors - prints an ANSI color table based on provided options
 #
-#   This is a heavily modified version of the script by Daniel Crisman found in the
+#   This is a modified version of the script by Daniel Crisman found in the
 #   [Bash Prompt HOWTO](https://tldp.org/HOWTO/Bash-Prompt-HOWTO/x329.html)
 #
 #   usage: `.zeza-ansi-colors LABEL HEADER FG_COLORS BG_COLORS`
@@ -598,18 +608,21 @@ function .zeza-ansi-colors() {
     local header="$2"
     local -a fore=( "${(@P)3}" )
     local -a back=( "${(@P)4}" )
+
+    # for tidy formatting
     local spacer="$wht       |                                                                         |$rst"
-    local footer="$wht Color |          Blk     Red     Grn     Ylw     Blu     Mag     Cyn     Wht    |$rst"
+    local footer="$wht Color |          BLK     RED     GRN     YLW     BLU     MAG     CYN     WHT    |$rst"
 
     # print table label and background column headers
     printf "$label\n"
     printf "$und$header$rst\n"
     printf "$spacer\n"
-    # for each foreground color code
+
+    # print a line for each foreground color code
     local f
     for f in "${(@)fore}" ; do
-        # trim spaces from each foreground code to use for actual color
-        # assignment in the table output
+
+        # trim spaces to use for actual color assignment in the table output
         fg="${f// /}"
 
         # print the code and sample text
@@ -618,16 +631,22 @@ function .zeza-ansi-colors() {
         # for each background color
         local b
         for b in "${(@)back}" ; do
+
             # print the sample text in the current fg color
             printf " \e[%s\e[%s  %s  %b" "$fg" "$b" "$text" "$rst"
         done
+
+        # print vertical bar at end of each line
         printf "  $wht|$rst\n"
     done
+
     printf "$spacer\n"
+
     # '\e[53m' is for overlined text and may not be supprted in many terminals
     # hopefully this just fails silently and nothing shows up
     # TODO: confirm this behavior
     printf "\e[53m$footer\n"
+
     printf "\n\n"
 
     return 0

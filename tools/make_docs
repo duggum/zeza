@@ -37,6 +37,7 @@ function make_docs() {
 
     printf "\n"
 }
-
 make_docs
+
 unalias sd
+unfunction make_docs

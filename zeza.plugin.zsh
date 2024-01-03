@@ -51,7 +51,7 @@
 
 #<<
 
-# use associative array for environment/state to minimize global pollution
+# use associative array for environment/state to minimize global parameter pollution
 typeset -gA ZEZA;
 
 # establish the plugin's 'home' dir ($0)
@@ -65,14 +65,14 @@ typeset -gA ZEZA;
 # functions:    internally accessed plugin functions
 # lib:          internally accessed library functions
 # cache:        plugin info that needs to be persistent
-#<<
 ZEZA[ROOT_DIR]="${0:h}"
 ZEZA[CONFIG_DIR]="$ZEZA[ROOT_DIR]/config"
 ZEZA[FUNC_DIR]="$ZEZA[ROOT_DIR]/functions"
 ZEZA[LIB_DIR]="$ZEZA[ROOT_DIR]/lib"
 ZEZA[CACHE_DIR]="${XDG_CACHE_HOME:-$HOME/.cache}/zeza"
+#<<
 
-#>> add function directory to fpath
+# add function directory to fpath
 fpath=( "$ZEZA[FUNC_DIR]" "${(@)fpath}" )
 
 #>> source func and lib files
@@ -99,12 +99,6 @@ if (( ! ${+commands[eza]} )); then
 fi
 
 #>> cached information
-# colors     : data used to set 'EZA_COLORS' (fi=00:di=01;34:*.mp3=01;36)
-# no_color   : if present indicates 'no color' mode is enabled
-# default    : if present indicates 'default' mode is enabled
-# reset      : if present indicates 'reset' flag is set in EZA_COLORS
-# user_config: the location of the user designated configuration file
-
 # create cache directory if needed
 if [[ ! -d "$ZEZA[CACHE_DIR]" ]] || [[ ! -w "$ZEZA[CACHE_DIR]" ]]; then
     .zeza-run-command /usr/bin/mkdir -p -m 700 -- "$ZEZA[CACHE_DIR]"
@@ -113,6 +107,12 @@ if [[ ! -d "$ZEZA[CACHE_DIR]" ]] || [[ ! -w "$ZEZA[CACHE_DIR]" ]]; then
         return 1
     fi
 fi
+
+# colors:       data used to set 'EZA_COLORS' (fi=00:di=01;34:*.mp3=01;36)
+# no_color:     if present indicates 'no color' mode is enabled
+# default:      if present indicates 'default' mode is enabled
+# reset:        if present indicates 'reset' flag is set in EZA_COLORS
+# user_config:  the location of the user designated configuration file
 ZEZA[EZA_COLORS_CACHE]="$ZEZA[CACHE_DIR]/.eza_colors"
 ZEZA[NO_COLOR_CACHE]="$ZEZA[CACHE_DIR]/.no_color_mode"
 ZEZA[DEFAULT_CACHE]="$ZEZA[CACHE_DIR]/.default_mode"
@@ -121,19 +121,19 @@ ZEZA[USER_CONFIG_CACHE]="$ZEZA[CACHE_DIR]/.user_config"
 #<<
 
 #>> utility variables
-ZEZA[CODES]=""      # color codes used by eza           #! access with "${(@f)ZEZA[CODES]}"
-ZEZA[SETTINGS]=""   # color settings from config file   #! access with "${(@f)ZEZA[SETTINGS]}"
+ZEZA[CODES]=""      # color codes used by eza #! access with "${(@f)ZEZA[CODES]}"
+ZEZA[SETTINGS]=""   # color settings from config file #! access with "${(@f)ZEZA[SETTINGS]}"
 ZEZA[COLORS]=""     # string to set the EZA_COLORS environment variable
-ZEZA[CMD_ERR]=""    # STDERR from running commands
-ZEZA[CMD_OUT]=""    # STDOUT from running commands
+ZEZA[CMD_ERR]=""    # STDERR from running commands via .zeza-run-command
+ZEZA[CMD_OUT]=""    # STDOUT from running commands via .zeza-run-command
 #<<
 
 #>> the default configuration filenames and paths
-# cfg_filename  : name used for custom configuration files
-# codes_file    : codes used to designate color settings (fi, gR, etc.)
-# defaults_file : default eza color assignments to codes (di=01;34)
-# current_config: configuration file currently in use
-# user_config_bu: the file use as a backup of user settings
+# cfg_filename:     name used for custom configuration files
+# codes_file:       codes used to designate color settings (fi, gR, etc.)
+# defaults_file:    default eza color assignments to codes (di=01;34)
+# current_config:   configuration file currently in use
+# user_config_bu:   the file use as a backup of user settings
 ZEZA[CFG_FILENAME]=".zeza_custom.eza"
 ZEZA[CODES_FILE]="$ZEZA[CONFIG_DIR]/zeza_codes.eza"
 ZEZA[DEFAULTS_FILE]="$ZEZA[CONFIG_DIR]/zeza_defaults.eza"
@@ -179,7 +179,7 @@ alias e='eza --git --icons --group-directories-first --sort=name'  # basic imple
 alias el='e -lh'  # mid form without user/group/hidden
 alias ell='e -lagh'  # long form with group names and hidden files
 
-# load configs or return error
+# load configuration files and set EZA_COLORS, or return error
 .zeza-load-codes || return $?
 .zeza-load-settings || return $?
 .zeza-load-ezacolors || return $?

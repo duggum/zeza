@@ -1,7 +1,18 @@
-# one entry per line in the form: code=description
-# comments are preceded by a '#'
-# '#>>' and '#<<' denote a folding region in VS Code
-# see: https://github.com/eza-community/eza/blob/main/man/eza_colors.5.md
+#>> EZA CODE DESCRIPTION FILE
+# This file contains all color codes currently used by eza, along with their
+# descriptions. This file is of no particular use to the end user, but is vital
+# for the successful operation of the zeza plugin. DO NOT DELETE IT!!
+#
+# Rules:
+# ---------------------------------------------------------
+#   1. one entry per line in the form: code="description"
+#   2. comments are preceded by a '#' and may be placed after an entry
+#
+# See: https://github.com/eza-community/eza/blob/main/man/eza_colors.5.md for
+# more information
+#
+# eza version: 0.17.0
+#<<
 
 #>> LS CODES USED BY EZA
 # ------------------------------------------------------------------------------
