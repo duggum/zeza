@@ -50,21 +50,19 @@
 #   White         37        47        97        107                            #
 #                                                                              #
 #------------------------------------------------------------------------------#
-#   SET EFFECTS             RESET EFFECTS                                      #                         #
+#   SET EFFECTS             RESET EFFECTS                                      #
 #------------------------------------------------------------------------------#
 #   --- ANY ---             00 Reset Everything (colors and effects)           #
 #   01 Set Bold             22 Reset Bold                                      #
 #   02 Set Dim/Faint        22 Reset Dim (same as reset bold)                  #
 #   03 Set Italic           23 Reset Italic                                    #
-#   04 Set Underline        24 Reset Underline (single or double, if in use)   #
+#   04 Set Underline        24 Reset Underline (single or double)              #
 #   05 Set Blink            25 Reset Blink                                     #
 #   07 Set Inverse          27 Reset Inverse                                   #
-#                                                                              #
-#   --- Not Widely Supported ---                                               #
-#                                                                              #
 #   08 Set Hidden           28 Reset Hidden                                    #
 #   09 Set Strikethrough    29 Reset Strikethrough                             #
-#   21 Double Underline     24 Reset Underline (single or double, if in use)   #
+#   21 Double Underline     24 Reset Underline (single or double)              #
+#   53 Overline             55 Reset Overline                                  #
 #                                                                              #
 #------------------------------------------------------------------------------#
 #   256 Colors                                                                 #
@@ -87,7 +85,7 @@
 #     bold, bright black (a.k.a. dark gray). This functionality reduces your   #
 #     overall color options as you will not be able to show bold normal text.  #
 #     That said, you may be able to disable/modify such behavior in your       #
-#     terminal emulator settings. Note, however, if you do color scheme uses   #
+#     terminal emulator settings. Note, however, if your color scheme uses     #
 #     the same color for black AND the background, any bold black text will    #
 #     still be rendered the same color as normal black text, and it will       #
 #     therefore be invisible.                                                  #
@@ -111,22 +109,17 @@
 
 #>> the variables
 local rst                                               # reset everything
-local bld dim itl und fla inv                           # set effects
-local rbld ritl rund rfla rinv                          # reset effects
+local bld dim itl und fla inv hid str dund ovr          # set effects
+local rbld ritl rund rfla rinv rhid rstr rovr           # reset effects
 local blk red grn ylw blu mag cyn wht                   # set normal fg colors
 local blkb redb grnb ylwb blub magb cynb whtb           # set bright fg colors
 local blknb rednb grnnb ylwnb blunb magnb cynnb whtnb   # set normal bg colors
 local blkbb redbb grnbb ylwbb blubb magbb cynbb whtbb   # set bright bg colors
 local rfg rbg                                           # reset fg/bg colors
-#-------------------------------------------------------------------------------
-# OPT: these are not widely supported - uncomment here and below to use
-# local hid str dund                                      # set effects
-# local rhid rstr                                         # reset effects
-#-------------------------------------------------------------------------------
 #<<
 
 # reset everything
-rst="\e[0m"         # resets everything to no colors/no effects
+rst="\e[0m"         # resets everything to defaults (no colors/no effects)
 
 #>> set effects
 bld="\e[1m"         # set bold
@@ -135,25 +128,21 @@ itl="\e[3m"         # set italic
 und="\e[4m"         # set underline
 fla="\e[5m"         # set flash a.k.a. blink
 inv="\e[7m"         # set inverse
-#-------------------------------------------------------------------------------
-# OPT: these are not widely supported - uncomment to use
-# hid="\e[8m"         # set hidden/not visible (not widely supported)
-# str="\e[9m"         # set strikethrough (not widely supported)
-# dund="\e[21m"       # set double underline (not widely supported)
-#-------------------------------------------------------------------------------
+hid="\e[8m"         # set hidden/not visible
+str="\e[9m"         # set strikethrough
+dund="\e[21m"       # set double underline
+ovr="\e[53m"        # set overline
 #<<
 
 #>> reset effects
 rbld="\e[22m"       # reset bold and/or dim
 ritl="\e[23m"       # reset italic
-rund="\e[24m"       # reset underline (single and double, if in use)
+rund="\e[24m"       # reset underline (single and double)
 rfla="\e[25m"       # reset flash a.k.a. blink
 rinv="\e[27m"       # reset inverse
-#-------------------------------------------------------------------------------
-# OPT: these are not widely supported - uncomment to use
-# rhid="\e[28m"       # reset hidden/invisible (not widely supported)
-# rstr="\e[29m"       # reset strikethrough (not widely supported)
-#-------------------------------------------------------------------------------
+rhid="\e[28m"       # reset hidden/invisible
+rstr="\e[29m"       # reset strikethrough
+rovr="\e[55m"       # reset overline
 #<<
 
 #>> set normal fg colors

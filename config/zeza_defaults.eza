@@ -31,21 +31,19 @@
 #   White         37        47        97        107                            #
 #                                                                              #
 #------------------------------------------------------------------------------#
-#   SET EFFECTS             RESET EFFECTS                                      #                         #
+#   SET EFFECTS             RESET EFFECTS                                      #
 #------------------------------------------------------------------------------#
 #   --- ANY ---             00 Reset Everything (colors and effects)           #
 #   01 Set Bold             22 Reset Bold                                      #
 #   02 Set Dim/Faint        22 Reset Dim (same as reset bold)                  #
 #   03 Set Italic           23 Reset Italic                                    #
-#   04 Set Underline        24 Reset Underline (single or double, if in use)   #
+#   04 Set Underline        24 Reset Underline (single or double)              #
 #   05 Set Blink            25 Reset Blink                                     #
 #   07 Set Inverse          27 Reset Inverse                                   #
-#                                                                              #
-#   --- Not Widely Supported ---                                               #
-#                                                                              #
 #   08 Set Hidden           28 Reset Hidden                                    #
 #   09 Set Strikethrough    29 Reset Strikethrough                             #
-#   21 Double Underline     24 Reset Underline (single or double, if in use)   #
+#   21 Double Underline     24 Reset Underline (single or double)              #
+#   53 Overline             55 Reset Overline                                  #
 #                                                                              #
 #------------------------------------------------------------------------------#
 #   256 Colors                                                                 #
@@ -68,7 +66,7 @@
 #     bold, bright black (a.k.a. dark gray). This functionality reduces your   #
 #     overall color options as you will not be able to show bold normal text.  #
 #     That said, you may be able to disable/modify such behavior in your       #
-#     terminal emulator settings. Note, however, if you do color scheme uses   #
+#     terminal emulator settings. Note, however, if your color scheme uses     #
 #     the same color for black AND the background, any bold black text will    #
 #     still be rendered the same color as normal black text, and it will       #
 #     therefore be invisible.                                                  #
