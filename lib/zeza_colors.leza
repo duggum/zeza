@@ -56,12 +56,12 @@
 #   01 Set Bold             22 Reset Bold                                      #
 #   02 Set Dim/Faint        22 Reset Dim (same as reset bold)                  #
 #   03 Set Italic           23 Reset Italic                                    #
-#   04 Set Underline        24 Reset Underline (single or double)              #
+#   04 Set Underline        24 Reset Underline                                 #
 #   05 Set Blink            25 Reset Blink                                     #
 #   07 Set Inverse          27 Reset Inverse                                   #
 #   08 Set Hidden           28 Reset Hidden                                    #
 #   09 Set Strikethrough    29 Reset Strikethrough                             #
-#   21 Double Underline     24 Reset Underline (single or double)              #
+#   21 Double Underline     24 Reset Double Underline (same as reset underline)#
 #   53 Overline             55 Reset Overline                                  #
 #                                                                              #
 #------------------------------------------------------------------------------#
@@ -108,14 +108,14 @@
 #<<
 
 #>> the variables
-local rst                                               # reset everything
-local bld dim itl und fla inv hid str dund ovr          # set effects
-local rbld ritl rund rfla rinv rhid rstr rovr           # reset effects
-local blk red grn ylw blu mag cyn wht                   # set normal fg colors
-local blkb redb grnb ylwb blub magb cynb whtb           # set bright fg colors
-local blknb rednb grnnb ylwnb blunb magnb cynnb whtnb   # set normal bg colors
-local blkbb redbb grnbb ylwbb blubb magbb cynbb whtbb   # set bright bg colors
-local rfg rbg                                           # reset fg/bg colors
+local rst                                                 # reset everything
+local bld dim itl und fla inv hid str dund ovr            # set effects
+local rbld rdim ritl rund rfla rinv rhid rstr rdund rovr  # reset effects
+local blk red grn ylw blu mag cyn wht                     # set normal fg colors
+local blkb redb grnb ylwb blub magb cynb whtb             # set bright fg colors
+local blknb rednb grnnb ylwnb blunb magnb cynnb whtnb     # set normal bg colors
+local blkbb redbb grnbb ylwbb blubb magbb cynbb whtbb     # set bright bg colors
+local rfg rbg                                             # reset fg/bg colors
 #<<
 
 # reset everything
@@ -135,13 +135,15 @@ ovr="\e[53m"        # set overline
 #<<
 
 #>> reset effects
-rbld="\e[22m"       # reset bold and/or dim
+rbld="\e[22m"       # reset bold
+rdim="\e[22m"       # reset dim (same as reset bold)
 ritl="\e[23m"       # reset italic
-rund="\e[24m"       # reset underline (single and double)
+rund="\e[24m"       # reset underline
 rfla="\e[25m"       # reset flash a.k.a. blink
 rinv="\e[27m"       # reset inverse
 rhid="\e[28m"       # reset hidden/invisible
 rstr="\e[29m"       # reset strikethrough
+rdund="\e[24m"      # reset double underline (same as reset underline)
 rovr="\e[55m"       # reset overline
 #<<
 

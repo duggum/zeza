@@ -59,12 +59,12 @@ reset sequence.
 | 01   | Bold             | 22         |                                 |
 | 02   | Dim/Faint        | 22         | Same as reset bold              |
 | 03   | Italic           | 23         |                                 |
-| 04   | Underline        | 24         | Single or double                |
+| 04   | Underline        | 24         |                                 |
 | 05   | Blink            | 25         |                                 |
 | 07   | Inverse          | 27         |                                 |
 | 08   | Hidden           | 28         |                                 |
 | 09   | Strikethrough    | 29         |                                 |
-| 21   | Double Underline | 24         | Single or double                |
+| 21   | Double Underline | 24         | Same as reset underline         |
 | 53   | Overline         | 55         |                                 |
 
 $^{2}$ *Not all color, effect, and/or reset codes are supported by all terminal emulators*
