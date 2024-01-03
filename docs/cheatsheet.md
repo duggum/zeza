@@ -20,7 +20,7 @@ used. The format for such sequences is:
 |`m`       | is the code for the SGR function                             |
 
 A good way to think of such a sequence is as a function call where `\e[` indicates
-you are calling a function, `<n[;n]>` represents the argument(s), and `m` is the
+you are calling a function, `n[;n]` represents the argument(s), and `m` is the
 function being called. $^{1}$
 
 $^{1}$ *[Everything you never wanted to know about ANSI escape codes](https://notes.burke.libbey.me/ansi-escape-codes/)*
