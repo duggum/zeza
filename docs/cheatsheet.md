@@ -35,7 +35,7 @@ all effects and colors to the system default, which is typically no color and no
 effects.
 
 Note that the leading `0` is not required, so `\e[1;4;33m` will yield the same
-results. In fact, \e[00m, \e[0m and \e[m are equivalent expressions for the global
+results. In fact, `\e[00m`, `\e[0m` and `\e[m` are equivalent expressions for the global
 reset sequence.
 
 ## Foreground/Background Colors and Resets
@@ -109,8 +109,9 @@ will be rendered as bold, bright black (a.k.a. dark gray).
 This 'functionality' is a holdover from a time when terminals only had eight
 colors and the bold flag was used to render a brighter variant of those eight
 colors. $^{4}$ This behavior reduces your overall color options as you will not
-be able to render both bold normal text *and* bold bright text. Fortunately, you
-may be able to disable/modify such behavior in your terminal emulator settings.$^{5}$
+be able to render both bold normal text *and* bold bright text as distinct colors.
+Fortunately, you may be able to disable/modify such behavior in your terminal
+emulator settings. $^{5}$
 
 For example, Windows Terminal has a setting for 'Intense text style' that can be
 set to 'bold', 'bright', or 'bold AND bright'. Setting it to 'bold' results in
