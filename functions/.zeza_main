@@ -47,6 +47,7 @@
 #   zeza restore . /home/config/backup/.zeza_config.eza
 #
 # @option -h | --help display help text and exit
+# @option -v | --version display the plugin version and supported `eza` version
 #
 # @arg $1 string COMMAND - the command to run
 # @arg $@ string ARGS - arguments and/or options for the COMMAND
@@ -90,6 +91,7 @@ function zeza() {
         printf "\t%bcommon options%b\n" "$cyn" "$wht"
         printf "\n"
         printf "\t    %b-h, --help%b    display usage information\n" "$itl" "$ritl"
+        printf "\t    %b-v, --version%b display version information\n" "$itl" "$ritl"
         printf "\n"
         printf "\t%bexample%b\n" "$cyn" "$wht"
         printf "\n"
@@ -102,6 +104,17 @@ function zeza() {
     if [[ "$1" =~ ^(-h|--help)$ ]] ; then
         printf "\n"
         print $help
+        printf "\n"
+        return 0
+    fi
+
+    # display version information
+    if [[ "$1" =~ ^(-v|--version)$ ]] ; then
+        printf "\n"
+        printf "%b %b%bversion%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t%bPlugin Version       : %b%s%b\n" "$wht" "$blub" "$ZEZA_PLUGIN_VERSION"
+        printf "\t%bSupported Eza Version: %b%s%b\n" "$wht" "$blub" "$ZEZA_EZA_VERSION"
         printf "\n"
         return 0
     fi
@@ -1581,9 +1594,10 @@ function _zeza {
 			)
 			_describe -t commands 'zeza' subcommands
 
-            # the help argument
+            # main options
             _arguments \
-                '(-h --help)'{-h,--help}'[display usage information]'
+                '(-h --help)'{-h,--help}'[display usage information]' \
+                '(-v --version)'{-v,--version}'[display version information]'
 		    ;;
 
 		options)

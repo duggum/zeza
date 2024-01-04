@@ -62,6 +62,10 @@ zeza restore . /home/config/backup/.zeza_config.eza
 
   display help text and exit
 
+* **-v** | **--version**
+
+  display the plugin version and supported `eza` version
+
 #### Arguments
 
 * **$1** (string): COMMAND - the command to run

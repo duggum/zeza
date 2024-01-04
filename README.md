@@ -7,6 +7,11 @@ get it for your operating system.
 
 [TODO](TODO.md)
 
+## Version
+
+- Plugin: 0.1.0
+- Updated for eza: 0.17.0
+
 ## Table of Contents
 
 - [Features](#features)

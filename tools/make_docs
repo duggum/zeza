@@ -17,6 +17,10 @@ function make_docs() {
     # save a lot of keystrokes...
     local tag=$(printf "%b[%bzeza%b]:%b" "$wht" "$(z256 f 214)" "$wht" "$rst")
 
+    #
+    # generate docs
+    #
+
     # the files to process and the destination
     local doc_dir="docs"
     local -A doc_pair
@@ -35,9 +39,36 @@ function make_docs() {
         sd < "$k" > "$v"
     done
 
+    #
+    # update version info in README.md
+    #
+
+    # files
+    builtin source "lib/zeza_versions.leza"
+    local readme="README.md"
+
+    # print a pretty header
     printf "\n"
+    printf "%b %b%bUpdate Versions%b\n" "$tag" "$wht" "$und" "$rst"
+    printf "\n"
+
+    # plugin version
+    sed -i.bak "s/\(^- Plugin: \)\([0-9.]\+\)/\1${ZEZA_PLUGIN_VERSION}/" "${readme:P}" && \
+        rm -f "$readme.bak" || return 1
+    printf "\t%bPlugin Version %b\t\t> %b%s%b\n" "$ylw" "$red" "$cynb" "${ZEZA_PLUGIN_VERSION}" "$rst"
+
+    # eza version
+    sed -i.bak "s/\(^- Updated for eza: \)\([0-9.]\+\)/\1${ZEZA_EZA_VERSION}/" "${readme:P}" && \
+        rm -f "$readme.bak" || return 1
+    printf "\t%bEza Version    %b\t\t> %b%s%b\n" "$ylw" "$red" "$cynb" "${ZEZA_EZA_VERSION}" "$rst"
+
+    printf "\n"
+
+    return 0
 }
 make_docs
 
 unalias sd
 unfunction make_docs
+
+return $?

@@ -380,7 +380,7 @@ _Function has no arguments._
 
 .zeza-ansi-colors - prints an ANSI color table based on provided options
 
-This is a heavily modified version of the script by Daniel Crisman found in the
+This is a modified version of the script by Daniel Crisman found in the
 [Bash Prompt HOWTO](https://tldp.org/HOWTO/Bash-Prompt-HOWTO/x329.html)
 
 usage: `.zeza-ansi-colors LABEL HEADER FG_COLORS BG_COLORS`

@@ -1,0 +1,16 @@
+#>>
+# Copyright (c) 2023 David Jopson
+#
+# zeza_versions.leza - Sets the following version information for the plugin:
+#
+#   1. the current plugin version
+#   2. the currently supported `eza` version
+#
+# editing these variables will also update version information in the README file
+# when documentation is generated.
+#<<
+
+#>> version information
+typeset -g ZEZA_PLUGIN_VERSION="0.1.0"
+typeset -g ZEZA_EZA_VERSION="0.17.0"
+#<<
