@@ -15,7 +15,7 @@ function make_docs() {
     builtin source "lib/zeza_colors.leza"
 
     # save a lot of keystrokes...
-    local tag=$(printf "%b[%bzeza%b]:%b" "$wht" "$(z256 f 214)" "$wht" "$rst")
+    local tag="${wht}[$(z256 f 214)zeza${wht}]:$rst"
 
     #
     # generate docs
@@ -35,8 +35,13 @@ function make_docs() {
     # generate documentation
     local k v
     for k v in "${(@kv)doc_pair}" ; do
-        printf "\t%b%s %b\t> %b%s%b\n" "$ylw" "$k" "$red" "$cynb" "$v" "$rst"
         sd < "$k" > "$v"
+        if [[ $? -eq 0 ]] ; then
+            printf "\t%b%s %b\t> %b%s%b\n" "$ylw" "$k" "$red" "$cynb" "$v" "$rst"
+        else
+            printf "\t%bFailed to generate docs from: %s %b\n" "$red" "$k" "$rst"
+            return 1
+        fi
     done
 
     #
@@ -53,14 +58,26 @@ function make_docs() {
     printf "\n"
 
     # plugin version
-    sed -i.bak "s/\(^- Plugin: \)\([0-9.]\+\)/\1${ZEZA_PLUGIN_VERSION}/" "${readme:P}" && \
-        rm -f "$readme.bak" || return 1
-    printf "\t%bPlugin Version %b\t\t> %b%s%b\n" "$ylw" "$red" "$cynb" "${ZEZA_PLUGIN_VERSION}" "$rst"
+    sed -i.bak "s/\(^- Plugin: \)\([0-9.]\+\)/\1$ZEZA_PLUGIN_VERSION/" "${readme:P}"
+    if [[ $? -eq 0 ]] ; then
+        printf "\t%bPlugin Version %b\t\t> %b%s%b\n" \
+            "$ylw" "$red" "$cynb" "$ZEZA_PLUGIN_VERSION" "$rst"
+        rm -f "$readme.bak"
+    else
+        printf "\t%bFailed to update Plugin Version!%b\n" "$red" "$rst"
+        return 1
+    fi
 
     # eza version
-    sed -i.bak "s/\(^- Updated for eza: \)\([0-9.]\+\)/\1${ZEZA_EZA_VERSION}/" "${readme:P}" && \
-        rm -f "$readme.bak" || return 1
-    printf "\t%bEza Version    %b\t\t> %b%s%b\n" "$ylw" "$red" "$cynb" "${ZEZA_EZA_VERSION}" "$rst"
+    sed -i.bak "s/\(^- Updated for eza: \)\([0-9.]\+\)/\1$ZEZA_EZA_VERSION/" "${readme:P}"
+    if [[ $? -eq 0 ]] ; then
+        printf "\t%bEza Version    %b\t\t> %b%s%b\n" \
+            "$ylw" "$red" "$cynb" "$ZEZA_EZA_VERSION" "$rst"
+        rm -f "$readme.bak"
+    else
+        printf "\t%bFailed to update Supported Eza Version!%b\n" "$red" "$rst"
+        return 1
+    fi
 
     printf "\n"
 

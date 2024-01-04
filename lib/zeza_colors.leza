@@ -205,7 +205,7 @@ rbg="\e[49m"        # reset background to default
 #<<
 function z256() {
     # validate the arguments
-    [[ $# -eq 2 ]] && [[ "$1" =~ "f|b" ]] && [[ "$2" =~ ^[[:digit:]]+$ ]] || return
+    [[ $# -eq 2 ]] && [[ "$1" =~ (f|b) ]] && [[ "$2" =~ ^[[:digit:]]+$ ]] || return
 
     # set fg/bg mode
     local -i mode
@@ -245,11 +245,11 @@ function z256() {
 function zrgb() {
 
     # see if terminal can handle the power of rgb
-    [[ -n "$COLORTERM" && "$COLORTERM" =~ "truecolor|24bit" ]] || \
+    [[ -n "$COLORTERM" && "$COLORTERM" =~ (truecolor|24bit) ]] || \
         [[ -n "$WT_SESSION" ]] || return
 
-    # validate step 1
-    if [[ $# -eq 4 ]] && [[ "$1" =~ "f|b" ]] ; then
+    # validate args step 1
+    if [[ $# -eq 4 ]] && [[ "$1" =~ (f|b) ]] ; then
 
         # set fg/bg mode
         local -i mode

@@ -243,7 +243,7 @@ function .zeza-load-ezacolors() {
         if [[ $? -eq 0 ]] ; then
 
             # only overwrite if the config file contained something
-            if [[ -n $ZEZA[CMD_OUT] ]] ; then
+            if [[ -n "$ZEZA[CMD_OUT]" ]] ; then
                 ZEZA[COLORS]="$ZEZA[CMD_OUT]"
                 export EZA_COLORS="$ZEZA[COLORS]"
             fi
@@ -346,21 +346,22 @@ function .zeza-delete-cache-file() {
     local arg
 
     # delete each file requested
-    for arg in "${@}"; do
+    for arg in "$@"; do
         case "$arg" in
             "default")
-                printf "%b %bDisabling '%s' mode..." "$tag" "$wht" "$arg:u"
+                printf "%b %bDisabling '%s' mode..." "$tag" "$wht" "${arg:u}"
                 rm -f "$ZEZA[DEFAULT_CACHE]"
                 ;;
             "eza_colors")
-                printf "%b %bClearing '%s'..." "$tag" "$wht" "$arg:u"
+                printf "%b %bClearing '%s'..." "$tag" "$wht" "${arg:u}"
                 unset EZA_COLORS
                 ZEZA[COLORS]=""
                 rm -f "$ZEZA[EZA_COLORS_CACHE]"
                 ;;
             "nocolor")
-                arg="${$(echo "$arg" | sed 's/_/ /'):u}"
-                printf "%b %bDisabling '%s' mode..." "$tag" "$wht" "$arg"
+                # make 'nocolor' 'no color'
+                arg="$(echo "$arg" | sed 's/no/no /')"
+                printf "%b %bDisabling '%s' mode..." "$tag" "$wht" "${arg:u}"
                 rm -f "$ZEZA[NO_COLOR_CACHE]"
                 ;;
             "user_cfg")
@@ -400,10 +401,10 @@ function .zeza-delete-cache-file() {
 function .zeza-enable-mode() {
 
     # we can't just have empty files
-    local msg=">> You have entered the '$1' zone!\n>> Do not delete this file!"
+    local msg=">> You have entered the '${1:u}' zone!\n>> Do not delete this file!"
 
     # create the requested cache file
-    printf "%b %bEnabling '%s' mode..." "$tag" "$wht" "$arg"
+    printf "%b %bEnabling '%s' mode..." "$tag" "$wht" "${1:u}"
     case "$1" in
         "nocolor")
             .zeza-run-command /usr/bin/touch "$ZEZA[NO_COLOR_CACHE]"
@@ -473,7 +474,7 @@ function .zeza-update-eza() {
     ZEZA[COLORS]=""
 
     # start with reset if requested
-    if [[ "$1" =~ ("reset"|"nocolor") ]] ; then
+    if [[ "$1" =~ (reset|nocolor) ]] ; then
         ZEZA[COLORS]="reset"
     fi
 
@@ -482,15 +483,15 @@ function .zeza-update-eza() {
         # since the user config may not have all codes, let's use the code file
         # as it contains ALL the codes currently in use by eza
         local desc code
-        for desc in ${(@f)ZEZA[CODES]} ; do
-            code=${desc%\=*}
+        for desc in "${(@f)ZEZA[CODES]}" ; do
+            code="${desc%\=*}"
             ZEZA[COLORS]+=":$code=00"
         done
 
     # use custom config
     else
         local setting
-        for setting in ${(@f)ZEZA[SETTINGS]} ; do
+        for setting in "${(@f)ZEZA[SETTINGS]}" ; do
             # check if empty to avoid leading colon
             if [[ -n "$ZEZA[COLORS]" ]] ; then
                 ZEZA[COLORS]+=":$setting"
@@ -551,13 +552,13 @@ function .zeza-256-colors() {
         line=$(( ($color - 16) % $lines ))
 
         # Appending the displayed color to the line
-        grid[$line]="$grid[$line]\e[38;5;${color}m#${color} \e[48;5;${color}m${space}\e[0m  "
+        grid[$line]="$grid[$line]\e[38;5;${color}m#$color \e[48;5;${color}m$space\e[0m  "
 
         # Counting how many blocks are filled
         [[ $line = 5 ]] && filled=$(( $filled + 1 ))
 
         # Enough blocks for this line, display them
-        if [[ $filled = $blocks ]]; then
+        if [[ "$filled" = "$blocks" ]]; then
             # Reset block counter
             filled=0;
             # Display each line

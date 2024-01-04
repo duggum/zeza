@@ -6,7 +6,7 @@
 - [ ] Confirm behavior of '\e[53m' in .zeza-ansi-colors
 - [ ] Add a few more ***useful*** aliases
 - [X] Ensure consistent comment block formatting
-- [ ] Ensure consistent use/non-use of double quotes and curly braces
+- [X] Ensure consistent use/non-use of double quotes and curly braces
 - [ ] Conform as much as possible to the [Zsh Plugin Standard (ZPS)](https://wiki.zshell.dev/community/zsh_plugin_standard)
     - [X] Standardized $0 handling
     - [ ] Functions directory

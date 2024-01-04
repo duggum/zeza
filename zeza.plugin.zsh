@@ -78,7 +78,7 @@ fpath=( "$ZEZA[FUNC_DIR]" "${(@)fpath}" )
 #>> source func and lib files
 builtin source "$ZEZA[FUNC_DIR]/.zeza_main"
 local file
-for file in $ZEZA[LIB_DIR]/*.leza ; do
+for file in "$ZEZA[LIB_DIR]/"*.leza ; do
     builtin source "$file"
 done
 unset file
@@ -158,7 +158,7 @@ if [[ -f "$ZEZA[USER_CONFIG_CACHE]" ]] ; then
     fi
 
     # make sure previously saved settings still exists and use default if it doesn't
-    if ! [[ -f $ZEZA[CURRENT_SETTINGS] ]] ; then
+    if ! [[ -f "$ZEZA[CURRENT_SETTINGS]" ]] ; then
         printf "%b %bThe previously saved configuration file is missing!%b\n" \
             "$tag" "$red" "$rst"
         printf "%b %bWas %b%s%b deleted?%b\n" \
