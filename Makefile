@@ -13,16 +13,18 @@ wht := \e[37m
 und := \e[4m
 rst := \e[0m
 
-# commands needed
-zsd := tools/shdoc/shdoc		# 'shdoc' to process doc comments
-zuv := tools/update_versions	# uses version data from the plugin
+# 'shdoc' to process doc comments
+zsd := tools/shdoc/shdoc
 
-# for docs
+# uses version data from the plugin to add version info to README.md
+zuv := tools/update_versions
+
+# the output docs
 doc_dir := docs
 doc_files := zeza.md main.md utils.md
 
 # for versions
-readme = README.md
+readme := README.md
 
 #
 # all
