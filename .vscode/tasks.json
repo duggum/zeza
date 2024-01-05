@@ -4,12 +4,39 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "echo",
+            "label": "Make Docs - All",
             "type": "shell",
-            "command": "${workspaceFolder}/tools/make_docs",
+            "command": "/usr/bin/make all",
             "group": {
                 "kind": "build",
                 "isDefault": true
+            }
+        },
+        {
+            "label": "Make Docs - Docs",
+            "type": "shell",
+            "command": "/usr/bin/make docs",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "Make Docs - Versions",
+            "type": "shell",
+            "command": "/usr/bin/make versions",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "Make Docs - Clean",
+            "type": "shell",
+            "command": "/usr/bin/make clean",
+            "group": {
+                "kind": "build",
+                "isDefault": false
             }
         }
     ]

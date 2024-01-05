@@ -2,7 +2,7 @@
 
 - [X] Create .md file from Color Code Cheat Sheet comment block
 - [X] Add ability to get plugin version and supported eza version info
-- [ ] Use Makefile to generate documentation instead of zsh script???
+- [X] Use Makefile to generate documentation instead of zsh script???
 - [ ] Confirm behavior of 'overline' (\e[53m) in .zeza-ansi-colors
 - [ ] Add a few more ***useful*** aliases
 - [X] Ensure consistent comment block formatting

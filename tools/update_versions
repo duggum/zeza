@@ -1,0 +1,54 @@
+#!/usr/bin/env zsh
+#>>
+# update_versions - update version information in the README.md file
+#
+# usage: update_versions
+#
+# while this can be run directly, it is better to include it in a Makefile
+#<<
+function update_versions() {
+
+    # for colorful output
+    builtin source "lib/zeza_colors.leza"
+
+    # save a lot of keystrokes...
+    local tag="${wht}[$(z256 f 214)zeza${wht}]:$rst"
+
+    # files
+    builtin source "lib/zeza_versions.leza"
+    local readme="README.md"
+
+    # print a pretty header
+    printf "\n"
+    printf "%b %b%bUpdate Versions%b\n" "$tag" "$wht" "$und" "$rst"
+    printf "\n"
+
+    # plugin version
+    sed -i.bak "s/\(^- Plugin:\)\([ 0-9.]*\)/\1 $ZEZA_PLUGIN_VERSION/" "${readme:P}"
+    if [[ $? -eq 0 ]] ; then
+        printf "\t%bPlugin Version %b\t> %b%s%b\n" \
+            "$ylw" "$red" "$cynb" "$ZEZA_PLUGIN_VERSION" "$rst"
+    else
+        printf "\t%bFailed to update Plugin Version!%b\n" "$red" "$rst"
+        return 1
+    fi
+
+    # eza version
+    sed -i.bak "s/\(^- Updated for eza:\)\([ 0-9.]*\)/\1 $ZEZA_EZA_VERSION/" "${readme:P}"
+    if [[ $? -eq 0 ]] ; then
+        printf "\t%bEza Version    %b\t> %b%s%b\n" \
+            "$ylw" "$red" "$cynb" "$ZEZA_EZA_VERSION" "$rst"
+    else
+        printf "\t%bFailed to update Supported Eza Version!%b\n" "$red" "$rst"
+        return 1
+    fi
+
+    printf "\n"
+
+    return 0
+}
+update_versions
+
+unfunction update_versions
+
+return $?
