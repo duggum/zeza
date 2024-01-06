@@ -174,10 +174,17 @@ else
     ZEZA[CURRENT_SETTINGS]="$ZEZA[DEFAULTS_FILE]"
 fi
 
-# set some sensible, default aliases for eza
-alias e='eza --git --icons --group-directories-first --sort=name'  # basic implementation
-alias el='e -lh'  # mid form without user/group/hidden
-alias ell='e -lagh'  # long form with group names and hidden files
+#>> aliases
+# default eza options
+local default_opts="--git --icons --group-directories-first --sort=name --header"
+
+# set aliases using options from env var if available
+alias e='eza '"${EZA_CMD_OPTS:-$default_opts}"  # base implementation
+alias el='e -lh --no-user'                      # mid form -user/group/hidden
+alias ell='e -lagh'                             # long form +group/hidden
+alias et='el --tree'                            # mid form tree listing
+alias elt='ell --tree'                          # long form tree listing
+#<<
 
 # load configuration files and set EZA_COLORS, or return error
 .zeza-load-codes || return $?
