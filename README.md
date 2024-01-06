@@ -16,8 +16,8 @@ get it for your operating system.
 
 - [Features](#features)
 - [Installation](#installation)
-- [Aliases](#aliases)
 - [Commands](#commands)
+- [Aliases](#aliases)
 - [Customization](#customization)
 - [Code Documentation](#code-documentation)
 - [Learn More](#learn-more)
