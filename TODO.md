@@ -4,7 +4,7 @@
 - [X] Add ability to get plugin version and supported eza version info
 - [X] Use Makefile to generate documentation instead of zsh script???
 - [ ] Confirm behavior of 'overline' (\e[53m) in .zeza-ansi-colors
-- [ ] Add a few more ***useful*** aliases
+- [X] Add a few more ***useful*** aliases
 - [X] Ensure consistent comment block formatting
 - [X] Ensure consistent use/non-use of double quotes and curly braces
 - [ ] Conform as much as possible to the [Zsh Plugin Standard (ZPS)](https://wiki.zshell.dev/community/zsh_plugin_standard)
