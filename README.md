@@ -49,31 +49,6 @@ plugins=(... zeza)
 
 Note: you have to [install] `eza` before using this plugin.
 
-## Aliases
-
-The following aliases are provided which can be overridden in your own `.zshenv`
-or `.zshrc` as desired. See: `man eza` for all available options.
-
-```shell
-# base implementation with default options
-alias e='eza --git --icons --group --group-directories-first --sort=name' 
-```
-![eza base demo](assets/eza_demo_base.png "a base alias directory listing")
-
-```shell
-# mid form implementation (plus -l, -h, and --no-user options)
-alias el='e -lh --no-user'
-```
-
-![eza mid demo](assets/eza_demo_mid.png "a mid form alias directory listing")
-
-```shell
-# long form implementation (plus -l, -a, -g, and -h options)
-alias ell='e -lagh'
-```
-
-![eza long demo](assets/eza_demo_long.png "a long form alias directory listing")
-
 ## Commands
 
 `zeza` provides the following commands
@@ -125,6 +100,77 @@ Feel free to jump down the [rabbit hole] if you wish to know more.
 ![zeza tables test demo](assets/zeza_tables_test_demo.png "a `zeza tables --test` command demo")
 
 Run `zeza tables --help` for detailed instructions.
+
+## Aliases
+
+The aliases provided use the following default `eza` command options:
+
+- `--git`
+- `--icons`
+- `--group`
+- `--group-directories-first`
+- `--sort=name`
+
+If you wish to set your own default command options, simply add the `EZA_CMD_OPTS`
+environment variable to your `.zshenv` or `.zshrc` file and export it:
+
+```shell
+export EZA_CMD_OPTS="<your options here>"
+```
+
+When you reload your shell, `zeza` will replace the internal default options with
+the ones you provided via `EZA_CMD_OPTS`. See: `man eza` for all available options.
+
+### Alias Preview
+
+The following aliases are provided. They too can be overridden in your `.zshenv`
+or `.zshrc` file as desired.
+
+```shell
+# base implementation with default options
+alias e='eza --git --icons --group --group-directories-first --sort=name' 
+```
+![eza base demo](assets/eza_demo_base.png "a base alias directory listing")
+
+```shell
+# mid form implementation (plus -l, -h, and --no-user options)
+alias el='e -lh --no-user'
+```
+
+![eza mid demo](assets/eza_demo_mid.png "a mid form alias directory listing")
+
+```shell
+# long form implementation (plus -l, -a, -g, and -h options)
+alias ell='e -lagh'
+```
+
+![eza long demo](assets/eza_demo_long.png "a long form alias directory listing")
+
+```shell
+# mid form tree listing
+alias et='el --tree'
+```
+
+![eza mid demo](assets/eza_demo_mid_tree.png "a mid form tree alias directory listing")
+
+```shell
+# long form tree listing
+alias elt='ell --tree'
+```
+
+![eza long demo](assets/eza_demo_long_tree.png "a long form tree alias directory listing")
+
+### LS Replacement
+
+This plugin does not assume that you want to replace `ls` with `eza`. If you wish
+to do so you can simply create your own aliases in your `.zshenv` or `.zshrc` file.
+
+For example:
+
+```shell
+alias ls='eza'
+alias ll='eza -la'
+```
 
 ## Customization
 
