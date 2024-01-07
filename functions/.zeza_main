@@ -134,7 +134,7 @@ function zeza() {
     local command="$1"
     shift
 
-    # call the command with remaing args, or show help and exit with error
+    # call the command with remaining args, or show help and exit with error
     if (( ${+functions[.zeza::$command]} )) ; then
         .zeza::$command "$@"
     else
