@@ -1590,8 +1590,10 @@ function _zeza {
 
     # make local copy of curcontext due to use of '-C' option for _arguments
 	local curcontext="$curcontext"
-	local state line
-	typeset -A opt_args
+
+    # per the ZSH Manual to prevent _arguments from altering the global environment.
+    local context state state_descr line
+    typeset -A opt_args
 
     # designate state for command and options
 	_arguments -C \
