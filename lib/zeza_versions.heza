@@ -11,6 +11,6 @@
 #<<
 
 #>> version information
-typeset -g ZEZA_PLUGIN_VERSION="0.1.0"
-typeset -g ZEZA_EZA_VERSION="0.17.0"
+local ZEZA_PLUGIN_VERSION="0.1.0"
+local ZEZA_EZA_VERSION="0.17.0"
 #<<

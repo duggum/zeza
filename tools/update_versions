@@ -15,7 +15,7 @@ function update_versions() {
     local tag="${wht}[$(z256 f 214)zeza${wht}]:$rst"
 
     # files
-    builtin source "lib/zeza_versions.leza"
+    builtin source "lib/zeza_versions.heza"
     local readme="README.md"
 
     # print a pretty header

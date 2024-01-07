@@ -63,6 +63,7 @@ function zeza() {
 
     # source the common function header
     builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
+    builtin source "$ZEZA[LIB_DIR]/zeza_versions.heza"
 
     # help text
     local help="$(
