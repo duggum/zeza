@@ -12,6 +12,7 @@ are arranged in two categories:
 ### Documentation
 * [README](../README.md#code-documentation)
 * [zeza](zeza.md)
+* [color](color.md)
 
 ## Index
 

@@ -27,7 +27,8 @@ The provided commands are:
 
 ### Documentation
 * [README](../README.md#code-documentation)
-* [zeza-utils](utils.md)
+* [utils](utils.md)
+* [color](color.md)
 
 ### More About eza
 * see [eza](https://github.com/eza-community/eza)

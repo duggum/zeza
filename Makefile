@@ -21,7 +21,7 @@ zuv := tools/update_versions
 
 # the output docs
 doc_dir := docs
-doc_files := zeza.md utils.md
+doc_files := zeza.md utils.md color.md
 
 # for versions
 readme := README.md
@@ -47,6 +47,7 @@ doc_label:
 # the doc targets and sources
 zeza.md: lib/zeza.lzsh
 utils.md: lib/zeza_utils.lzsh
+color.md: lib/zeza_color.lzsh
 
 # process all
 $(doc_files):
