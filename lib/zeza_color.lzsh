@@ -27,15 +27,43 @@
 #       7. 256 and RGB colors are applied using command substitution to call
 #          their respective functions: `$(z256 f 122)` or `$(zRGB b 134 12 47)`
 #
-#   Variables Set:
-#   ```zsh
-#   # Notes:
-#   #   'r' = reset (e.g. rbld - reset bold)
-#   #   'b' = bright (e.g. magb - bright magenta)
-#   #   'nb' = normal background (e.g. grnnb - green normal background)
-#   #   'bb' = bright background (e.g. blubb - blue bright background)
+#   Usage Example:
 #
-#   # the variables
+#   ```zsh
+#   local err="${wht}[$(z256 f 214)ERROR${wht}]:$rst"
+#   echo "$err you have made an error!"
+#   ```
+#
+#   Example using printf:
+#
+#   ```zsh
+#   printf "%b%bBold, red text!%b" "$bld" "$red" "$rst"
+#   ```
+#
+#   Notes:
+#       1. Braces (`{ }`) are only required if the color parameter is to be
+#          directly followed by a letter, digit, or underscore that is not to be
+#          interpreted as part of name (e.g. `$red/` -or- `${blu}text`).
+#       2. `%b` has to be used with `printf` instead of `%s` to cause the color
+#          escape sequences to be recognised
+#
+#   ### Color Code Cheat Sheet
+#       * [cheatsheet](cheatsheet.md)
+#
+#   ### Documentation
+#       * [README](../README.md#code-documentation)
+#       * [zeza](zeza.md)
+#       * [utils](utils.md)
+#
+#   ## Variables Set
+#
+#   Notes:
+#     - `r` = reset (e.g. `$rbld` - reset bold)
+#     - `b` = bright (e.g. `$magb` - bright magenta)
+#     - `nb` = normal background (e.g. `$grnnb` - green normal background)
+#     - `bb` = bright background (e.g. `$blubb` - blue bright background)
+#
+#   ```zsh
 #   local rst                                                 # reset everything
 #   local bld dim itl und fla inv hid str dund ovr            # set effects
 #   local rbld rdim ritl rund rfla rinv rhid rstr rdund rovr  # reset effects
@@ -116,34 +144,6 @@
 #   rfg="\e[39m"        # reset foreground to default
 #   rbg="\e[49m"        # reset background to default
 #   ```
-#
-#   Usage Example:
-#
-#   ```zsh
-#   local err="${wht}[$(z256 f 214)ERROR${wht}]:$rst"
-#   echo "$err you have made an error!"
-#   ```
-#
-#   Example using printf:
-#
-#   ```zsh
-#   printf "%b%bBold, red text!%b" "$bld" "$red" "$rst"
-#   ```
-#
-#   Notes:
-#       1. Braces (`{ }`) are only required if the color parameter is to be
-#          directly followed by a letter, digit, or underscore that is not to be
-#          interpreted as part of name (e.g. `$red/` -or- `${blu}text`).
-#       2. `%b` has to be used with `printf` instead of `%s` to cause the color
-#          escape sequences to be recognised
-#
-#   ### Color Code Cheat Sheet
-#       * [cheatsheet](cheatsheet.md)
-#
-#   ### Documentation
-#       * [README](../README.md#code-documentation)
-#       * [zeza](zeza.md)
-#       * [utils](utils.md)
 
 #<<
 
@@ -313,8 +313,6 @@ rbg="\e[49m"        # reset background to default
 # @description
 #   z256 - returns a 256-color SGR control sequence (e.g. `\e[38;5;137m`)
 #
-#          must be called using command substitution '$(command)'
-#
 #   usage: `$(z256 MODE COLOR)`
 #
 # @example
@@ -337,8 +335,6 @@ function z256() {
 # @description
 #   zRGB - returns an RGB color SGR control sequence (e.g. `\e[38;2;0;255;0m`)
 #
-#          must be called using command substitution '$(command)'
-#
 #   This function will only work under the following conditions:
 #       1. the `$COLORTERM` variable is set to `truecolor` or `24bit`,
 #       2. the `$TERM` variable is set to: `iterm`, `tmux-truecolor`, `linux-truecolor`,
@@ -348,7 +344,7 @@ function z256() {
 #   If either test is false, the function will fail silently and return nothing.
 #
 #   These checks will cover most *nix terminal emulators and, in the case of the
-#   second condition, Windows Terminal. While this detection method is far from
+#   third condition, Windows Terminal. While this detection method is far from
 #   perfect and will almost certainly exclude some terminal emulators that
 #   shouldn't be, it is a simple method that covers most scenarios and prevents
 #   this simple library file from getting way more complex than it needs to be.
