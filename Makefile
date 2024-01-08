@@ -21,7 +21,7 @@ zuv := tools/update_versions
 
 # the output docs
 doc_dir := docs
-doc_files := zeza.md main.md utils.md
+doc_files := zeza.md utils.md
 
 # for versions
 readme := README.md
@@ -45,14 +45,13 @@ doc_label:
 	@printf "\n"
 
 # the doc targets and sources
-zeza.md: zeza.plugin.zsh
-main.md: functions/.zeza_main
-utils.md: lib/zeza_utils.leza
+zeza.md: lib/zeza.lzsh
+utils.md: lib/zeza_utils.lzsh
 
 # process all
 $(doc_files):
 	@$(zsd) < $^ > $(doc_dir)/$@
-	@printf "\t%b%s %b\t> %b%s%b\n" "$(ylw)" "$^" "$(red)" "$(cynb)" "$@" "$(rst)"
+	@printf "\t%b%s %b> %b%s%b\n" "$(ylw)" "$^" "$(red)" "$(cynb)" "$@" "$(rst)"
 
 #
 # versions
@@ -66,12 +65,13 @@ versions:
 #
 # clean
 #
+cleanup := $(readme).bak $(foreach file,$(doc_files),$(doc_dir)/$(file))
 
 # use .PHONY for safety
 .PHONY: clean
 clean:
 	@printf "\n"
-	@printf "%b %bCleaning up...%b" "$(tag)" "$(wht)"
-	@rm -f $(readme).bak
-	@printf "%bDone%b\n" "$(grn)" "$(rst)"
+	@printf "%b %b%bCleaning%b\n" "$(tag)" "$(wht)" "$(und)" "$(rst)"
 	@printf "\n"
+	@rm -f $(cleanup)
+	@printf "\t%bDeleted %b> %b%s%b\n" "$(ylw)" "$(red)" "$(cynb)" "$(cleanup)" "$(rst)"

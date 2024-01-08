@@ -8,14 +8,25 @@
 #<<
 function update_versions() {
 
+    # standard recommended options per:
+    # https://wiki.zshell.dev/community/zsh_plugin_standard#standard-recommended-options
+    builtin emulate -L zsh ${=${options[xtrace]:#off}:+-o xtrace}
+    builtin setopt extended_glob warn_create_global typeset_silent \
+        no_short_loops rc_quotes no_autopushd
+
+    # standard recommended variables per:
+    # https://wiki.zshell.dev/community/zsh_plugin_standard#standard-recommended-variables
+    local MATCH REPLY; integer MBEGIN MEND
+    local -a match mbegin mend reply
+
     # for colorful output
-    builtin source "lib/zeza_colors.leza"
+    builtin source "lib/zeza_colors.lzsh"
 
     # save a lot of keystrokes...
     local tag="${wht}[$(z256 f 214)zeza${wht}]:$rst"
 
-    # files
-    builtin source "lib/zeza_versions.heza"
+    # files to work on
+    builtin source "lib/zeza_versions.hzsh"
     local readme="README.md"
 
     # print a pretty header
@@ -26,7 +37,7 @@ function update_versions() {
     # plugin version
     sed -i.bak "s/\(^- Plugin:\)\([ 0-9.]*\)/\1 $ZEZA_PLUGIN_VERSION/" "${readme:P}"
     if [[ $? -eq 0 ]] ; then
-        printf "\t%bPlugin Version %b\t> %b%s%b\n" \
+        printf "\t%bPlugin Version %b> %b%s%b\n" \
             "$ylw" "$red" "$cynb" "$ZEZA_PLUGIN_VERSION" "$rst"
     else
         printf "\t%bFailed to update Plugin Version!%b\n" "$red" "$rst"
@@ -36,7 +47,7 @@ function update_versions() {
     # eza version
     sed -i.bak "s/\(^- Updated for eza:\)\([ 0-9.]*\)/\1 $ZEZA_EZA_VERSION/" "${readme:P}"
     if [[ $? -eq 0 ]] ; then
-        printf "\t%bEza Version    %b\t> %b%s%b\n" \
+        printf "\t%bEza Version %b> %b%s%b\n" \
             "$ylw" "$red" "$cynb" "$ZEZA_EZA_VERSION" "$rst"
     else
         printf "\t%bFailed to update Supported Eza Version!%b\n" "$red" "$rst"

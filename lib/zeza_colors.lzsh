@@ -1,13 +1,13 @@
 #>>
 #   Copyright (c) 2023 David Jopson
 #
-#   zeza_colors.leza - a general purpose color library for the zeza zsh plugin
+#   zeza_colors.lzsh - a general purpose color library for the zeza plugin
 #
 #   All variables are declared as local to minimize global scope pollution.
 #   This file must be sourced in each file or function you wish to use it in,
 #   like so:
 #
-#       'builtin source "path/to/eza_colors.leza"'
+#       'builtin source "path/to/eza_colors.lzsh"'
 #
 #   Note the following rules for applying colors and effects:
 #

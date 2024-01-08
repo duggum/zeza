@@ -10,9 +10,8 @@ are arranged in two categories:
 2. state management
 
 ### Documentation
-* [README](../README.md)
+* [README](../README.md#code-documentation)
 * [zeza](zeza.md)
-* [zeza-main](main.md)
 
 ## Index
 

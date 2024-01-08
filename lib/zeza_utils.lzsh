@@ -10,14 +10,13 @@
 #       2. state management
 #
 #   ### Documentation
-#       * [README](../README.md)
+#       * [README](../README.md#code-documentation)
 #       * [zeza](zeza.md)
-#       * [zeza-main](main.md)
 
 #<<
 
 # save some keystrokes
-local tag="$ZEZA[OUTPUT_TAG]"
+# local tag="$ZEZA[OUTPUT_TAG]"
 
 #-------------------------------------------------------------------------------
 # COMMAND EXECUTION AND ERROR HANDLING

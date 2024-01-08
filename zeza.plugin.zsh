@@ -23,32 +23,6 @@
 #   SOFTWARE.
 #
 #   VERSION: 0.1 - initial build
-#
-# @name zeza plugin
-# @brief A Z Shell (zsh) plugin for managing and customizing '[eza](https://eza.rocks)'
-# @description
-#   'eza' is a very colorful replacement for the venerable 'ls' utility.
-#
-#   While eza needs nothing more than the `EZA_COLORS` environment variable to
-#   customize its color configuration, this plugin provides a few extra
-#   conveniences for a more complete eza experience, such as:
-#       1. an easy to read color configuration file,
-#       2. a few sensible aliases, and
-#       3. several helpful commands to manage eza
-#
-#   updated for `eza v0.17.0`
-#
-#   ### Documentation
-#       * [README](../README.md)
-#       * [zeza-main](main.md)
-#       * [zeza-utils](utils.md)
-#
-#   ### More About eza
-#       * see [eza](https://github.com/eza-community/eza)
-#       * see `man eza`
-#       * see `man eza_colors`
-#       * see `man eza_colors-explanation`
-
 #<<
 
 # use associative array for environment/state to minimize global parameter pollution
@@ -62,23 +36,17 @@ typeset -gA ZEZA;
 #>> plugin directories
 # root:         plugin root
 # config:       configuration files
-# functions:    internally accessed plugin functions
-# lib:          internally accessed library functions
+# lib:          internally accessed library files
 # cache:        plugin info that needs to be persistent
 ZEZA[ROOT_DIR]="${0:h}"
 ZEZA[CONFIG_DIR]="$ZEZA[ROOT_DIR]/config"
-ZEZA[FUNC_DIR]="$ZEZA[ROOT_DIR]/functions"
 ZEZA[LIB_DIR]="$ZEZA[ROOT_DIR]/lib"
 ZEZA[CACHE_DIR]="${XDG_CACHE_HOME:-$HOME/.cache}/zeza"
 #<<
 
-# add function directory to fpath
-fpath=( "$ZEZA[FUNC_DIR]" "${(@)fpath}" )
-
-#>> source func and lib files
-builtin source "$ZEZA[FUNC_DIR]/.zeza_main"
+#>> source lib files
 local file
-for file in "$ZEZA[LIB_DIR]/"*.leza ; do
+for file in "$ZEZA[LIB_DIR]/"*.lzsh ; do
     builtin source "$file"
 done
 unset file
