@@ -182,7 +182,8 @@ above may be overriden by providing your own aliases with the same names.
 Documentation for the main code files can be found at:
 
 * [zeza](docs/zeza.md)
-* [zeza-utils](docs/utils.md)
+* [utils](docs/utils.md)
+* [color](docs/color.md)
 
 ## Learn More
 
