@@ -130,7 +130,7 @@ _Function has no arguments._
 
 #### See also
 
-* [.zeza-file-system-error](#zezafilesystemerror)
+* [.zeza-file-system-error](#zeza-file-system-error)
 
 ### .zeza-load-settings
 
@@ -165,7 +165,7 @@ _Function has no arguments._
 
 #### See also
 
-* [.zeza-file-system-error](#zezafilesystemerror)
+* [.zeza-file-system-error](#zeza-file-system-error)
 
 ### .zeza-load-ezacolors
 
@@ -201,7 +201,7 @@ _Function has no arguments._
 
 #### See also
 
-* [.zeza-file-system-error](#zezafilesystemerror)
+* [.zeza-file-system-error](#zeza-file-system-error)
 
 ### .zeza-cache-backup
 
@@ -242,7 +242,7 @@ usage: `.zeza-cache-backup [OPERATION] [PATH]`
 
 #### See also
 
-* [.zeza-file-system-error](#zezafilesystemerror)
+* [.zeza-file-system-error](#zeza-file-system-error)
 
 ### .zeza-delete-cache-file
 
@@ -310,7 +310,7 @@ usage: `.zeza-enable-mode MODE`
 
 #### See also
 
-* [.zeza-file-system-error](#zezafilesystemerror)
+* [.zeza-file-system-error](#zeza-file-system-error)
 
 ### .zeza-update-eza
 
@@ -350,7 +350,7 @@ usage: `.zeza-update-eza [MODE]`
 
 #### See also
 
-* [.zeza-file-system-error](#zezafilesystemerror)
+* [.zeza-file-system-error](#zeza-file-system-error)
 
 ### .zeza-256-colors
 

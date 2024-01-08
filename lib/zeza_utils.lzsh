@@ -133,7 +133,7 @@ function .zeza-run-command() {
 #
 # @stderr file read error message
 #
-# @see [.zeza-file-system-error](#zezafilesystemerror)
+# @see [.zeza-file-system-error](#zeza-file-system-error)
 #<<
 function .zeza-load-codes() {
 
@@ -183,7 +183,7 @@ function .zeza-load-codes() {
 #
 # @stderr file read error message
 #
-# @see [.zeza-file-system-error](#zezafilesystemerror)
+# @see [.zeza-file-system-error](#zeza-file-system-error)
 #<<
 function .zeza-load-settings() {
 
@@ -233,7 +233,7 @@ function .zeza-load-settings() {
 #
 # @stderr file read error message
 #
-# @see [.zeza-file-system-error](#zezafilesystemerror)
+# @see [.zeza-file-system-error](#zeza-file-system-error)
 #<<
 function .zeza-load-ezacolors() {
 
@@ -280,7 +280,7 @@ function .zeza-load-ezacolors() {
 # @stdout confirmation of the requested operation
 # @stderr file write error message
 #
-# @see [.zeza-file-system-error](#zezafilesystemerror)
+# @see [.zeza-file-system-error](#zeza-file-system-error)
 #<<
 function .zeza-cache-backup() {
 
@@ -396,7 +396,7 @@ function .zeza-delete-cache-file() {
 # @stdout confirmation of the requested operation
 # @stderr file write error message
 #
-# @see [.zeza-file-system-error](#zezafilesystemerror)
+# @see [.zeza-file-system-error](#zeza-file-system-error)
 #<<
 function .zeza-enable-mode() {
 
@@ -463,7 +463,7 @@ function .zeza-enable-mode() {
 # @stdout confirmation of the requested operation
 # @stderr file write error message
 #
-# @see [.zeza-file-system-error](#zezafilesystemerror)
+# @see [.zeza-file-system-error](#zeza-file-system-error)
 #<<
 function .zeza-update-eza() {
 

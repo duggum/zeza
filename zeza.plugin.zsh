@@ -89,8 +89,8 @@ ZEZA[USER_CONFIG_CACHE]="$ZEZA[CACHE_DIR]/.user_config"
 #<<
 
 #>> utility variables
-ZEZA[CODES]=""      # color codes used by eza #! access with "${(@f)ZEZA[CODES]}"
-ZEZA[SETTINGS]=""   # color settings from config file #! access with "${(@f)ZEZA[SETTINGS]}"
+ZEZA[CODES]=""      # color codes used by eza - access with "${(@f)ZEZA[CODES]}"
+ZEZA[SETTINGS]=""   # color settings from config file - access with "${(@f)ZEZA[SETTINGS]}"
 ZEZA[COLORS]=""     # string to set the EZA_COLORS environment variable
 ZEZA[CMD_ERR]=""    # STDERR from running commands via .zeza-run-command
 ZEZA[CMD_OUT]=""    # STDOUT from running commands via .zeza-run-command
@@ -101,7 +101,7 @@ ZEZA[CMD_OUT]=""    # STDOUT from running commands via .zeza-run-command
 # codes_file:       codes used to designate color settings (fi, gR, etc.)
 # defaults_file:    default eza color assignments to codes (di=01;34)
 # current_config:   configuration file currently in use
-# user_config_bu:   the file use as a backup of user settings
+# user_config_bu:   name use as a backup of user settings
 ZEZA[CFG_FILENAME]=".zeza_custom.eza"
 ZEZA[CODES_FILE]="$ZEZA[CONFIG_DIR]/zeza_codes.eza"
 ZEZA[DEFAULTS_FILE]="$ZEZA[CONFIG_DIR]/zeza_defaults.eza"

@@ -23,9 +23,6 @@ zuv := tools/update_versions
 doc_dir := docs
 doc_files := zeza.md utils.md color.md
 
-# for versions
-readme := README.md
-
 #
 # all
 #
@@ -66,13 +63,21 @@ versions:
 #
 # clean
 #
-cleanup := $(readme).bak $(foreach file,$(doc_files),$(doc_dir)/$(file))
+readme := README.md.bak
+cleanup := $(readme) $(foreach file,$(doc_files),$(doc_dir)/$(file))
 
 # use .PHONY for safety
 .PHONY: clean
 clean:
 	@printf "\n"
 	@printf "%b %b%bCleaning%b\n" "$(tag)" "$(wht)" "$(und)" "$(rst)"
+	@printf "\n"
+	@rm -f $(readme)
+	@printf "\t%bDeleted %b> %b%s%b\n" "$(ylw)" "$(red)" "$(cynb)" "$(readme)" "$(rst)"
+
+clean-all:
+	@printf "\n"
+	@printf "%b %b%bCleaning All%b\n" "$(tag)" "$(wht)" "$(und)" "$(rst)"
 	@printf "\n"
 	@rm -f $(cleanup)
 	@printf "\t%bDeleted %b> %b%s%b\n" "$(ylw)" "$(red)" "$(cynb)" "$(cleanup)" "$(rst)"

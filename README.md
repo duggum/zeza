@@ -5,8 +5,6 @@ get it for your operating system.
 
 ![eza default demo](assets/eza_demo.png "a demo directory listing using eza")
 
-[TODO](TODO.md)
-
 ## Version
 
 - Plugin: 0.1.0
@@ -199,7 +197,7 @@ For `eza` see the following man pages:
 
 For ANSI colors in terminal emulators:
 
-- [Everything] you ever wanted to know about ANSI escape codes
+- [Everything] you *never* wanted to know about ANSI escape codes
 - A wikipedia article covering the use of [SGR parameters]
 - [ECMA 48] 5th edition
 
