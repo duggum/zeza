@@ -22,7 +22,7 @@
 #   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #   SOFTWARE.
 #
-#   VERSION: 0.1 - initial build
+#   VERSION: 1.0.0
 #<<
 
 # use associative array for environment/state to minimize global parameter pollution

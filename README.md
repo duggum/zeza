@@ -7,7 +7,7 @@ get it for your operating system.
 
 ## Version
 
-- Plugin: 0.1.0
+- Plugin: 1.0.0
 - Updated for eza: 0.17.0
 
 ## Table of Contents
