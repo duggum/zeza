@@ -2,12 +2,20 @@
 #>>
 # Copyright (c) 2023 David Jopson
 #
-# @name .zeza_main
-# @brief User-facing functions for the zeza plugin
+# @file zeza
+# @brief A Z Shell (zsh) plugin for managing and customizing '[eza](https://eza.rocks)'
 # @description
-#   This file provides all of the user-facing commands for the zeza plugin.
+#   'eza' is a very colorful replacement for the venerable 'ls' utility.
 #
-#   The commands are:
+#   While eza needs nothing more than the `EZA_COLORS` environment variable to
+#   customize its color configuration, this plugin provides a more complete eza
+#   experience by providing a few extra conveniences, such as:
+#
+#       1. an easy to read color configuration file,
+#       2. a few sensible aliases, and
+#       3. several helpful commands to manage eza
+#
+#   The provided commands are:
 #       * `configure`
 #       * `default`
 #       * `demo`
@@ -18,15 +26,18 @@
 #       * `status`
 #       * `tables`
 #
+#   ### Documentation
+#       * [README](../README.md#code-documentation)
+#       * [zeza-utils](utils.md)
+#
+#   ### More About eza
+#       * see [eza](https://github.com/eza-community/eza)
+#       * see `man eza`
+#       * see `man eza_colors`
+#       * see `man eza_colors-explanation`
+#
 #   Note: The exit codes used here are based on those found in 'sysexits.h' from
 #         the Standard C Library. See `man sysexits.h` for more information.
-#
-#   Updated for `eza v0.17.0`
-#
-#   ### Documentation
-#       * [README](../README.md)
-#       * [zeza](zeza.md)
-#       * [zeza-utils](utils.md)
 
 #<<
 
@@ -61,9 +72,26 @@
 #<<
 function zeza() {
 
-    # source the common function header
-    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
-    builtin source "$ZEZA[LIB_DIR]/zeza_versions.heza"
+    # standard recommended options per:
+    # https://wiki.zshell.dev/community/zsh_plugin_standard#standard-recommended-options
+    builtin emulate -LR zsh ${=${options[xtrace]:#off}:+-o xtrace}
+    builtin setopt extended_glob warn_create_global typeset_silent \
+        no_short_loops rc_quotes no_autopushd
+
+    # standard recommended variables per:
+    # https://wiki.zshell.dev/community/zsh_plugin_standard#standard-recommended-variables
+    local MATCH REPLY; integer MBEGIN MEND
+    local -a match mbegin mend reply
+
+    # source the version file
+    builtin source "$ZEZA[LIB_DIR]/zeza_versions.hzsh"
+
+    # source the color library
+    builtin source "$ZEZA[LIB_DIR]/zeza_colors.lzsh"
+
+    # these get used a lot, so save some keystrokes
+    local tag="$ZEZA[OUTPUT_TAG]"
+    local cancelled="\n$tag$ylw Operation cancelled.$rst\n"
 
     # help text
     local help="$(
@@ -78,7 +106,6 @@ function zeza() {
         printf "\n"
         printf "\t%bcommands%b\n" "$cyn" "$wht"
         printf "\n"
-        printf "\t    %bhelp%b          print this help message\n" "$itl" "$ritl"
         printf "\t    %bconfigure%b     generate a customizable configuration file\n" "$itl" "$ritl"
         printf "\t    %bdefault%b       setup eza to use the default, builtin color configuration\n" "$itl" "$ritl"
         printf "\t    %bdemo%b          print color codes and descriptions in their assigned colors\n" "$itl" "$ritl"
@@ -101,25 +128,6 @@ function zeza() {
         printf "\t    zeza restore /home/user /my/backup/config/.zeza_custom.eza%b\n" "$rst"
     )"
 
-    # display help and exit
-    if [[ "$1" =~ ^(-h|--help)$ ]] ; then
-        printf "\n"
-        print "$help"
-        printf "\n"
-        return 0
-    fi
-
-    # display version information
-    if [[ "$1" =~ ^(-v|--version)$ ]] ; then
-        printf "\n"
-        printf "%b %b%bversion%b\n" "$tag" "$magb" "$itl" "$rst"
-        printf "\n"
-        printf "\t%bPlugin Version       : %b%s%b\n" "$wht" "$blub" "$ZEZA_PLUGIN_VERSION"
-        printf "\t%bSupported Eza Version: %b%s%b\n" "$wht" "$blub" "$ZEZA_EZA_VERSION"
-        printf "\n"
-        return 0
-    fi
-
     # if not enough args, show help and exit with error
     if [[ $# -eq 0 ]]; then
         printf "\n"
@@ -128,6 +136,25 @@ function zeza() {
         print "$help"
         printf "\n"
         return 64
+    fi
+
+    # display help and exit
+    if [[ "$1" =~ ^(-h|--help)$ ]] ; then
+        printf "\n"
+        print "$help"
+        printf "\n"
+        return 0
+    fi
+
+    # display version information and exit
+    if [[ "$1" =~ ^(-v|--version)$ ]] ; then
+        printf "\n"
+        printf "%b %b%bversion%b\n" "$tag" "$magb" "$itl" "$rst"
+        printf "\n"
+        printf "\t%bPlugin Version       : %b%s%b\n" "$wht" "$blub" "$ZEZA_PLUGIN_VERSION"
+        printf "\t%bSupported Eza Version: %b%s%b\n" "$wht" "$blub" "$ZEZA_EZA_VERSION"
+        printf "\n"
+        return 0
     fi
 
     # capture the actual command from the args
@@ -183,9 +210,6 @@ function zeza() {
 # @see [.zeza::restore](#zezarestore)
 #<<
 function .zeza::configure() {
-
-    # source the common function header
-    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
 
     # help text
     local help="$(
@@ -466,9 +490,6 @@ function .zeza::configure() {
 #<<
 function .zeza::default() {
 
-    # source the common function header
-    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
-
     printf "\n"
 
     # help text
@@ -521,7 +542,7 @@ function .zeza::default() {
         if [[ "$ZEZA[CURRENT_SETTINGS]" != "$ZEZA[DEFAULTS_FILE]" ]] ; then
 
             # backup user's config unless called with 'cfg_missing' or 'no color' mode
-            if [[ "$1" != "cfg_missing" && -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
+            if [[ "$1" != "cfg_missing" || -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
                 .zeza-cache-backup
                 if [[ $? -eq 0 ]] ; then
                     printf "%b %bUser configuration backed up to...%b%s%b\n" \
@@ -586,9 +607,6 @@ function .zeza::default() {
 # @see [eza_colors(5)](https://github.com/eza-community/eza/blob/main/man/eza_colors.5.md)
 #<<
 function .zeza::demo() {
-
-    # source the common function header
-    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
 
     printf "\n"
 
@@ -733,9 +751,6 @@ function .zeza::demo() {
 #<<
 function .zeza::nocolor() {
 
-    # source the common function header
-    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
-
     printf "\n"
 
     # help text
@@ -839,9 +854,6 @@ function .zeza::nocolor() {
 #<<
 function .zeza::refresh() {
 
-    # source the common function header
-    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
-
     printf "\n"
 
     # help text
@@ -929,9 +941,6 @@ function .zeza::refresh() {
 #<<
 function .zeza::reset() {
 
-    # source the common function header
-    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
-
     printf "\n"
 
     # help text
@@ -1005,6 +1014,19 @@ function .zeza::reset() {
         return 69
     fi
 
+    # exit if in default or no color mode
+    if [[ -f "$ZEZA[DEFAULT_CACHE]" || -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
+        printf "%b %bReset is only available for custom configurations!%b\n" \
+            "$tag" "$red" "$rst" 1>&2
+        printf "%b %bRun '%b%bzeza configure%b%b' to create a custom configuration.%b\n" \
+            "$tag" "$wht" "$magb" "$itl" "$ritl" "$wht" "$rst" 1>&2
+        printf "\n"
+
+        # show configure help text
+        .zeza::configure --help
+        return 64
+    fi
+
     local response
 
     # fair warning
@@ -1015,19 +1037,6 @@ function .zeza::reset() {
     if [[ "${response:l}" = "y" ]] ; then
 
         printf "\n"
-
-        # exit if in default or no color mode
-        if [[ -f "$ZEZA[DEFAULT_CACHE]" || -f "$ZEZA[NO_COLOR_CACHE]" ]] ; then
-            printf "%b %bReset is only available for custom configurations!%b\n" \
-                "$tag" "$red" "$rst" 1>&2
-            printf "%b %bRun '%b%bzeza configure%b%b' to create a custom configuration.%b\n" \
-                "$tag" "$wht" "$magb" "$itl" "$ritl" "$wht" "$rst" 1>&2
-            printf "\n"
-
-            # show configure help text
-            .zeza::configure --help
-            return 64
-        fi
 
         # make sure all settings are current
         .zeza-load-settings || return $?
@@ -1073,9 +1082,6 @@ function .zeza::reset() {
 # @stderr various error messages depending on where in the function the error occurred
 #<<
 function .zeza::restore() {
-
-    # source the common function header
-    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
 
     printf "\n"
 
@@ -1266,9 +1272,6 @@ function .zeza::restore() {
 #<<
 function .zeza::status() {
 
-    # source the common function header
-    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
-
     printf "\n"
 
     # help text
@@ -1396,9 +1399,6 @@ function .zeza::status() {
 #   * a bold/bright color terminal emulator test and information
 #<<
 function .zeza::tables() {
-
-    # source the common function header
-    builtin source "$ZEZA[LIB_DIR]/zeza_header.heza"
 
     printf "\n"
 

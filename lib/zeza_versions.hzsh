@@ -1,13 +1,14 @@
 #>>
 # Copyright (c) 2023 David Jopson
 #
-# zeza_versions.leza - Sets the following version information for the plugin:
+# zeza_versions.hzsh - Header file that sets the following version information
+#                      for the zeza plugin:
 #
 #   1. the current plugin version
 #   2. the currently supported `eza` version
 #
 # editing these variables will also update version information in the README file
-# when documentation is generated.
+# when documentation is generated via 'make docs'.
 #<<
 
 #>> version information
