@@ -20,7 +20,7 @@ function update_versions() {
     local -a match mbegin mend reply
 
     # for colorful output
-    builtin source "lib/zeza_colors.lzsh"
+    builtin source "lib/zeza_color.lzsh"
 
     # save a lot of keystrokes...
     local tag="${wht}[$(z256 f 214)zeza${wht}]:$rst"

@@ -28,7 +28,8 @@
 #
 #   ### Documentation
 #       * [README](../README.md#code-documentation)
-#       * [zeza-utils](utils.md)
+#       * [utils](utils.md)
+#       * [color](color.md)
 #
 #   ### More About eza
 #       * see [eza](https://github.com/eza-community/eza)
@@ -87,7 +88,7 @@ function zeza() {
     builtin source "$ZEZA[LIB_DIR]/zeza_versions.hzsh"
 
     # source the color library
-    builtin source "$ZEZA[LIB_DIR]/zeza_colors.lzsh"
+    builtin source "$ZEZA[LIB_DIR]/zeza_color.lzsh"
 
     # these get used a lot, so save some keystrokes
     local tag="$ZEZA[OUTPUT_TAG]"
